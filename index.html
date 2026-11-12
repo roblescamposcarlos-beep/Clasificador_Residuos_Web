@@ -4,588 +4,608 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Clasificador de residuos por foto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f1f8f2;
-    --card: #ffffff;
-    --text: #1f2d26;
-    --muted: #55655c;
-    --line: #cfe3d3;
-    --verde: #2e7d32;
-    --verde-osc: #1b5e20;
-    --verde-cl: #e3f2e5;
-    --tierra: #6d4c41;
-    --ok: #2e7d32;
-    --parcial: #b26a00;
-    --mal: #b3261e;
-    --sin: #5f6b73;
-    --code: #14231b;
-    --code-text: #d8efdc;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0f1a14;
-      --card: #172419;
-      --text: #e6f2e8;
-      --muted: #a4b8aa;
-      --line: #2a3f2f;
-      --verde: #66bb6a;
-      --verde-osc: #2e7d32;
-      --verde-cl: #1d3323;
-      --tierra: #d7b49e;
-      --ok: #7bd17f;
-      --parcial: #f0b35a;
-      --mal: #ff8a80;
-      --sin: #9fb0b8;
-      --code: #0a120d;
-      --code-text: #cfe9d3;
-    }
+    --fondo1: #1a1040;
+    --fondo2: #0b4a5c;
+    --verde: #7cffb2;
+    --amarillo: #ffd93d;
+    --rosa: #ff6b9d;
+    --cielo: #4dd9ff;
+    --morado: #8b6cff;
+    --naranja: #ff9f43;
+    --texto: #ffffff;
+    --suave: rgba(255, 255, 255, 0.78);
+    --vidrio: rgba(255, 255, 255, 0.12);
+    --borde: rgba(255, 255, 255, 0.28);
+    --titulo: "Fredoka", "Trebuchet MS", "Segoe UI", sans-serif;
+    --cuerpo: "Nunito", "Segoe UI", Arial, sans-serif;
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
     margin: 0;
-    font-family: "Segoe UI", Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.55;
-  }
-  header {
-    background: linear-gradient(135deg, var(--verde-osc), #3b8f3f);
-    color: #fff;
-    padding: 36px 16px 30px;
-    text-align: center;
-  }
-  header h1 { margin: 0 0 8px; font-size: clamp(1.6rem, 4vw, 2.3rem); }
-  header p { margin: 0 auto 14px; max-width: 680px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-  .chip {
-    background: rgba(255, 255, 255, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    border-radius: 999px;
-    padding: 4px 12px;
-    font-size: 0.85rem;
-  }
-  nav {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    background: var(--card);
-    border-bottom: 1px solid var(--line);
-    display: flex;
-    gap: 4px;
-    overflow-x: auto;
-    padding: 8px 12px;
-    justify-content: center;
-  }
-  nav a {
-    color: var(--text);
-    text-decoration: none;
-    white-space: nowrap;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.92rem;
-  }
-  nav a:hover { background: var(--verde-cl); }
-  main { max-width: 980px; margin: 0 auto; padding: 8px 16px 48px; }
-  section { margin-top: 36px; scroll-margin-top: 60px; }
-  h2 { margin: 0 0 6px; color: var(--verde); font-size: 1.45rem; }
-  .sub { margin: 0 0 16px; color: var(--muted); }
-  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 16px;
-  }
-  button {
-    font: inherit;
-    cursor: pointer;
-    color: inherit;
-  }
-  .tema {
-    text-align: left;
-    width: 100%;
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-left: 6px solid var(--verde);
-    border-radius: 12px;
-    padding: 14px 16px;
-  }
-  .tema:hover, .tema[aria-expanded="true"] { background: var(--verde-cl); }
-  .tema strong { display: block; font-size: 1.02rem; margin-bottom: 2px; }
-  .tema .corto { color: var(--muted); font-size: 0.92rem; }
-  .tema .mas { display: none; margin-top: 10px; font-size: 0.92rem; border-top: 1px dashed var(--line); padding-top: 8px; }
-  .tema[aria-expanded="true"] .mas { display: block; }
-  .flujo { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .paso {
-    background: var(--card);
-    border: 2px solid var(--line);
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 0.92rem;
-  }
-  .paso[aria-pressed="true"] { border-color: var(--verde); background: var(--verde-cl); font-weight: 600; }
-  .flecha { color: var(--muted); }
-  #detallePaso { margin-top: 12px; min-height: 92px; }
-  #detallePaso h3 { margin: 0 0 4px; font-size: 1.05rem; color: var(--verde); }
-  #detallePaso code, .mini code {
-    background: var(--verde-cl);
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 0.88rem;
-    overflow-wrap: anywhere;
-  }
-  .autor {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    background: var(--verde-cl);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-bottom: 14px;
-  }
-  .autor .sello {
-    flex: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--verde);
-    color: #fff;
-    display: grid;
-    place-items: center;
-    font-weight: 700;
-  }
-  .pestanas { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-  .pestanas button {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 6px 14px;
-  }
-  .pestanas button[aria-pressed="true"] { background: var(--verde); color: #fff; border-color: var(--verde); }
-  pre {
-    margin: 0;
-    background: var(--code);
-    color: var(--code-text);
-    border-radius: 10px;
-    padding: 14px;
-    overflow-x: auto;
-    white-space: pre-wrap;
-    font-size: 0.86rem;
-    line-height: 1.5;
-    font-family: Consolas, "Courier New", monospace;
-  }
-  .barra-copia { display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px; gap: 8px; flex-wrap: wrap; }
-  .btn {
-    background: var(--verde);
-    color: #fff;
-    border: 0;
-    border-radius: 8px;
-    padding: 7px 14px;
-  }
-  .btn:hover { background: var(--verde-osc); }
-  .historia { margin-top: 12px; font-size: 0.93rem; }
-  .historia li { margin-bottom: 4px; }
-  .filtros { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-  .filtros button {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 5px 14px;
-    font-size: 0.9rem;
-  }
-  .filtros button[aria-pressed="true"] { background: var(--verde); color: #fff; border-color: var(--verde); }
-  .pruebas { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-  .prueba {
-    text-align: left;
-    background: var(--card);
-    border: 2px solid var(--line);
-    border-radius: 12px;
-    padding: 0;
-    overflow: hidden;
-  }
-  .prueba[aria-pressed="true"] { border-color: var(--verde); box-shadow: 0 0 0 2px var(--verde-cl); }
-  .prueba .foto {
-    height: 100px;
-    background: var(--verde-cl);
-    display: grid;
-    place-items: center;
-    color: var(--muted);
-    font-size: 0.8rem;
-    overflow: hidden;
-  }
-  .prueba .foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .prueba .txt { padding: 8px 10px; font-size: 0.88rem; }
-  .etiqueta {
-    display: inline-block;
-    border-radius: 6px;
-    padding: 1px 8px;
-    font-size: 0.78rem;
+    min-height: 100vh;
+    font-family: var(--cuerpo);
     font-weight: 600;
-    border: 1px solid currentColor;
+    font-size: 1.05rem;
+    color: var(--texto);
+    background: linear-gradient(160deg, var(--fondo1), var(--fondo2));
+    background-attachment: fixed;
+    overflow-x: hidden;
+    line-height: 1.5;
   }
-  .e-ok { color: var(--ok); }
-  .e-parcial { color: var(--parcial); }
-  .e-mal { color: var(--mal); }
-  .e-sin { color: var(--sin); }
-  #detallePrueba { margin-top: 14px; }
-  #detallePrueba h3 { margin: 0 0 8px; }
-  #detallePrueba dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 0.93rem; }
-  #detallePrueba dt { color: var(--muted); }
-  #detallePrueba dd { margin: 0; }
-  .detalle-fila { display: flex; gap: 14px; flex-wrap: wrap; }
-  .detalle-fila img { width: 180px; max-width: 100%; border-radius: 10px; border: 1px solid var(--line); }
-  .apilada { display: flex; height: 34px; border-radius: 8px; overflow: hidden; margin: 8px 0 10px; border: 1px solid var(--line); }
-  .apilada div { display: grid; place-items: center; font-size: 0.8rem; font-weight: 700; color: #fff; }
-  .a-ok { background: #2e7d32; }
-  .a-parcial { background: #b26a00; }
-  .a-mal { background: #b3261e; }
-  .a-sin { background: #5f6b73; }
-  .leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--muted); }
-  .nums { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
-  .num { text-align: center; }
-  .num b { display: block; font-size: 1.9rem; color: var(--verde); line-height: 1.1; }
-  .num span { color: var(--muted); font-size: 0.88rem; }
-  footer {
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.45;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .b1 { width: 340px; height: 340px; background: var(--rosa); top: -80px; left: -100px; }
+  .b2 { width: 420px; height: 420px; background: var(--cielo); bottom: -140px; right: -120px; }
+  .b3 { width: 280px; height: 280px; background: var(--verde); top: 45%; left: 55%; opacity: 0.25; }
+  @media (prefers-reduced-motion: no-preference) {
+    .b1 { animation: flota 14s ease-in-out infinite; }
+    .b2 { animation: flota 18s ease-in-out infinite reverse; }
+    .b3 { animation: flota 22s ease-in-out infinite; }
+    @keyframes flota { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(40px, 50px); } }
+    .vuela { animation: sube 5s ease-in-out infinite; }
+    .vuela:nth-child(2n) { animation-duration: 6.5s; animation-delay: -2s; }
+    .vuela:nth-child(3n) { animation-duration: 7.5s; animation-delay: -4s; }
+    @keyframes sube { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-16px) rotate(6deg); } }
+  }
+  main, header, footer, nav { position: relative; z-index: 1; }
+
+  /* ---------- Portada ---------- */
+  .hero { text-align: center; padding: 56px 16px 28px; position: relative; }
+  .hero h1 { margin: 0; font-family: var(--titulo); line-height: 0.95; }
+  .hero .l1 { display: block; font-size: clamp(1.6rem, 6vw, 2.6rem); color: var(--amarillo); font-weight: 600; }
+  .hero .l2 {
+    display: block;
+    font-size: clamp(3.4rem, 17vw, 8rem);
+    font-weight: 700;
+    letter-spacing: -2px;
+    background: linear-gradient(90deg, var(--verde), var(--cielo), var(--rosa), var(--amarillo));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero .l3 { display: block; font-size: clamp(1.6rem, 6vw, 2.6rem); color: var(--rosa); font-weight: 600; }
+  .lema { font-family: var(--titulo); font-size: clamp(1.15rem, 3.4vw, 1.7rem); margin: 18px auto 16px; max-width: 640px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .chip {
+    background: var(--vidrio);
+    border: 2px solid var(--borde);
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: 0.95rem;
+    font-weight: 800;
+  }
+  .chip.claude { border-color: var(--amarillo); color: var(--amarillo); }
+  .flotantes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .vuela { position: absolute; font-size: clamp(1.8rem, 5vw, 3rem); opacity: 0.9; }
+
+  nav { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 6px 16px 10px; }
+  nav a {
+    color: var(--texto);
+    text-decoration: none;
+    font-family: var(--titulo);
+    font-weight: 600;
+    background: var(--vidrio);
+    border: 2px solid var(--borde);
+    border-radius: 999px;
+    padding: 8px 20px;
+    transition: transform 0.15s, background 0.15s;
+  }
+  nav a:hover { background: var(--morado); transform: translateY(-3px) scale(1.04); }
+
+  main { max-width: 1000px; margin: 0 auto; padding: 0 16px 40px; }
+  section { margin-top: 56px; scroll-margin-top: 20px; }
+  h2 {
+    font-family: var(--titulo);
+    font-size: clamp(1.9rem, 6vw, 3rem);
+    margin: 0 0 4px;
+    line-height: 1.05;
+  }
+  h2 span { background: linear-gradient(90deg, var(--amarillo), var(--naranja)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .pista { margin: 0 0 20px; color: var(--suave); font-size: 1rem; }
+
+  /* ---------- Tarjetas que giran ---------- */
+  .tarjetas { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .giro { perspective: 900px; background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: center; }
+  .giro-in { position: relative; display: block; min-height: 210px; transition: transform 0.6s; transform-style: preserve-3d; }
+  .giro.volteada .giro-in { transform: rotateY(180deg); }
+  .cara {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 18px;
+    border-radius: 22px;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .cara .ico { font-size: 3.4rem; line-height: 1; }
+  .cara b { font-family: var(--titulo); font-size: 1.55rem; line-height: 1.1; }
+  .cara.atras { transform: rotateY(180deg); font-family: var(--titulo); font-size: 1.45rem; font-weight: 600; line-height: 1.2; }
+  .c1 .cara { background: linear-gradient(145deg, #ff6b9d, #ff9f43); }
+  .c2 .cara { background: linear-gradient(145deg, #4dd9ff, #8b6cff); }
+  .c3 .cara { background: linear-gradient(145deg, #2fd48a, #ffd93d); color: #12301f; }
+  .giro:hover .giro-in { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); border-radius: 22px; }
+
+  /* ---------- Datos ---------- */
+  .datos { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .dato {
+    background: var(--vidrio);
+    border: 2px solid var(--borde);
+    border-radius: 22px;
+    padding: 20px 14px;
     text-align: center;
-    color: var(--muted);
-    font-size: 0.88rem;
-    padding: 20px 16px 36px;
-    border-top: 1px solid var(--line);
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    backdrop-filter: blur(6px);
   }
-  footer a { color: var(--verde); }
-  :focus-visible { outline: 3px solid var(--verde); outline-offset: 2px; }
+  .dato:hover { transform: translateY(-6px) rotate(-1deg); background: rgba(255, 255, 255, 0.2); }
+  .dato .gran { font-family: var(--titulo); font-weight: 700; font-size: clamp(2.6rem, 9vw, 3.6rem); line-height: 1; }
+  .dato p { margin: 8px 0 0; font-weight: 800; }
+  .dato small { display: block; color: var(--suave); font-weight: 600; margin-top: 2px; }
+  .d1 .gran { color: var(--amarillo); }
+  .d2 .gran { color: var(--cielo); }
+  .d3 .gran { color: var(--rosa); }
+  .d4 .gran { color: var(--verde); }
+  .d7 .gran { color: var(--naranja); }
+  .anillo {
+    --p: 0;
+    --c: var(--verde);
+    width: 132px;
+    height: 132px;
+    border-radius: 50%;
+    margin: 0 auto 4px;
+    display: grid;
+    place-items: center;
+    background: conic-gradient(var(--c) calc(var(--p) * 1%), rgba(255, 255, 255, 0.16) 0);
+  }
+  .anillo .centro {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #1c1450;
+    display: grid;
+    place-items: center;
+  }
+  .anillo .gran { font-size: 2.2rem; color: var(--texto); }
+  .d5 .anillo { --c: var(--verde); }
+  .d6 .anillo { --c: var(--cielo); }
+  .nota { color: var(--suave); font-size: 0.92rem; margin: 14px 0 0; text-align: center; }
+
+  /* ---------- Juego ---------- */
+  .juego {
+    background: var(--vidrio);
+    border: 3px solid var(--borde);
+    border-radius: 28px;
+    padding: 22px 18px 26px;
+    backdrop-filter: blur(6px);
+  }
+  .juego-top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-family: var(--titulo); font-size: 1.1rem; }
+  .barra { height: 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); margin: 10px 0 18px; overflow: hidden; }
+  .barra i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--verde), var(--cielo)); border-radius: 999px; transition: width 0.4s; }
+  .objeto { text-align: center; margin-bottom: 16px; }
+  .objeto .emoji { display: block; font-size: clamp(4rem, 18vw, 6.5rem); line-height: 1.1; }
+  @media (prefers-reduced-motion: no-preference) { .objeto .emoji.nuevo { animation: entra 0.45s cubic-bezier(.2, 1.6, .4, 1); } @keyframes entra { from { transform: scale(0.2) rotate(-25deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } } }
+  .objeto h3 { font-family: var(--titulo); font-size: clamp(1.5rem, 5vw, 2.1rem); margin: 4px 0 0; }
+  .opciones { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  .opcion {
+    font-family: var(--titulo);
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #fff;
+    border: 3px solid rgba(255, 255, 255, 0.55);
+    border-radius: 18px;
+    padding: 16px 12px;
+    cursor: pointer;
+    transition: transform 0.15s, filter 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .opcion .oi { font-size: 1.9rem; line-height: 1; }
+  .opcion:hover:not(:disabled) { transform: translateY(-4px) scale(1.03); }
+  .opcion:disabled { cursor: default; }
+  .o-organico { background: linear-gradient(145deg, #1faa6b, #4cd964); }
+  .o-reciclable { background: linear-gradient(145deg, #2f80ed, #4dd9ff); }
+  .o-noreciclable { background: linear-gradient(145deg, #7a7f8a, #a3a8b3); color: #10131a; }
+  .o-peligroso { background: linear-gradient(145deg, #e8335a, #ff9f43); }
+  .opcion.correcta { outline: 5px solid var(--amarillo); }
+  .opcion.mal { filter: grayscale(0.85) brightness(0.7); }
+  #feedback { min-height: 3.2em; text-align: center; margin: 16px 0 6px; font-size: 1.12rem; font-weight: 800; }
+  #feedback.bien { color: var(--verde); }
+  #feedback.error { color: var(--rosa); }
+  .centro-btn { text-align: center; }
+  .boton {
+    font-family: var(--titulo);
+    font-size: 1.2rem;
+    font-weight: 600;
+    background: var(--amarillo);
+    color: #2a1d00;
+    border: 0;
+    border-radius: 999px;
+    padding: 12px 30px;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .boton:hover { transform: scale(1.06) rotate(-1deg); }
+  .final { text-align: center; padding: 10px 0; }
+  .final .copa { font-size: 4.5rem; display: block; }
+  .final h3 { font-family: var(--titulo); font-size: clamp(1.8rem, 6vw, 2.6rem); margin: 6px 0; }
+  .final p { font-size: 1.2rem; margin: 4px 0 16px; }
+  [hidden] { display: none !important; }
+  #confeti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+
+  footer { text-align: center; padding: 30px 16px 44px; color: var(--suave); font-size: 0.95rem; }
+  footer b { color: var(--amarillo); }
+  :focus-visible { outline: 4px solid var(--amarillo); outline-offset: 3px; }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>Clasificador de residuos por foto</h1>
-  <p>Un bot de Telegram que recibe la foto de un residuo y, con inteligencia artificial con visión, dice qué es, si se recicla y a dónde va.</p>
+<div class="blob b1" aria-hidden="true"></div>
+<div class="blob b2" aria-hidden="true"></div>
+<div class="blob b3" aria-hidden="true"></div>
+<canvas id="confeti" aria-hidden="true"></canvas>
+
+<header class="hero">
+  <div class="flotantes" aria-hidden="true">
+    <span class="vuela" style="left:6%; top:14%">🍌</span>
+    <span class="vuela" style="left:88%; top:10%">🥤</span>
+    <span class="vuela" style="left:14%; top:68%">♻️</span>
+    <span class="vuela" style="left:82%; top:62%">🔋</span>
+    <span class="vuela" style="left:48%; top:4%">🌎</span>
+  </div>
+  <h1>
+    <span class="l1">Clasificador de</span>
+    <span class="l2">RESIDUOS</span>
+    <span class="l3">por foto</span>
+  </h1>
+  <p class="lema">Toma una foto y descubre a dónde va.</p>
   <div class="chips">
     <span class="chip">Desarrollo Sustentable</span>
-    <span class="chip">Unidad 3 · Tema 3.3</span>
-    <span class="chip">Telegram + Make + IA</span>
+    <span class="chip claude">Instrucciones de la IA redactadas por Claude</span>
   </div>
 </header>
 
 <nav aria-label="Secciones">
   <a href="#materia">La materia</a>
-  <a href="#base">En qué se basa</a>
-  <a href="#instrucciones">Instrucciones de la IA</a>
-  <a href="#pruebas">Pruebas</a>
-  <a href="#resumen">Resultados</a>
+  <a href="#datos">Los datos</a>
+  <a href="#juego">Juega</a>
 </nav>
 
 <main>
 
 <section id="materia">
-  <h2>Qué usamos de la materia</h2>
-  <p class="sub">Tres ideas de Desarrollo Sustentable, en pocas palabras. Toca una para ver más.</p>
-  <div class="grid" id="temas"></div>
+  <h2>Lo que usamos de la <span>materia</span></h2>
+  <p class="pista">Toca las tarjetas para girarlas.</p>
+  <div class="tarjetas" id="tarjetas"></div>
 </section>
 
-<section id="base">
-  <h2>En qué se basó</h2>
-  <p class="sub">Práctica 3.3, «Clasificador de residuos por foto»: impacto de las actividades humanas sobre la naturaleza. Toca cada paso del flujo.</p>
-  <div class="flujo" id="flujo" role="group" aria-label="Pasos del flujo"></div>
-  <div class="card" id="detallePaso" aria-live="polite"></div>
+<section id="datos">
+  <h2>Lo que <span>normalmente hace</span></h2>
+  <p class="pista">Toca un dato para verlo otra vez.</p>
+  <div class="datos" id="listaDatos"></div>
+  <p class="nota">Datos de 10 fotos de prueba.</p>
 </section>
 
-<section id="instrucciones">
-  <h2>Instrucciones de la IA</h2>
-  <p class="sub">El texto que le dice a la inteligencia artificial cómo reconocer y explicar cada foto.</p>
-  <div class="autor">
-    <div class="sello" aria-hidden="true">C</div>
-    <div>
-      <strong>Redactadas por Claude</strong><br>
-      Los textos de instrucciones para la IA de reconocimiento de fotos los redactó Claude, la IA de Anthropic, a partir de la guía de la práctica.
+<section id="juego">
+  <h2>¿A qué <span>contenedor</span> va?</h2>
+  <p class="pista">Clasifica 10 residuos antes de que la IA lo haga por ti.</p>
+  <div class="juego">
+    <div id="partida">
+      <div class="juego-top">
+        <span id="progreso">Residuo 1 de 10</span>
+        <span id="racha"></span>
+        <span>Puntos: <b id="puntos">0</b></span>
+      </div>
+      <div class="barra"><i id="barra"></i></div>
+      <div class="objeto">
+        <span class="emoji" id="emoji" aria-hidden="true"></span>
+        <h3 id="nombre"></h3>
+      </div>
+      <div class="opciones" id="opciones"></div>
+      <p id="feedback" aria-live="polite"></p>
+      <div class="centro-btn"><button type="button" class="boton" id="siguiente" hidden>Siguiente</button></div>
     </div>
-  </div>
-  <div class="pestanas" role="group" aria-label="Versión de las instrucciones">
-    <button type="button" id="verBase" aria-pressed="true">Formato de respuesta</button>
-    <button type="button" id="verReglas" aria-pressed="false">Reglas de seguridad y precisión</button>
-  </div>
-  <pre id="codigo"></pre>
-  <div class="barra-copia">
-    <span id="msgCopia" class="sub" style="margin:0" aria-live="polite"></span>
-    <button type="button" class="btn" id="copiar">Copiar instrucciones completas</button>
-  </div>
-  <div class="card historia">
-    <strong>Cómo mejoraron con la primera prueba</strong>
-    <ol>
-      <li>Primera foto: vidrio y plástico entre piedras. El bot respondió «filtro de cigarro», lo cual era incorrecto.</li>
-      <li>Se agregaron dos reglas: describir solo lo que realmente se ve y, si hay varios residuos, clasificar el principal y mencionar los demás.</li>
-      <li>Segunda foto: una bolsa de botana. Esta vez la identificó bien y respondió con el formato completo. La foto de vidrio no se volvió a probar.</li>
-    </ol>
-  </div>
-</section>
-
-<section id="pruebas">
-  <h2>Las 10 pruebas</h2>
-  <p class="sub">Se fotografiaron 10 residuos y se verificó cada respuesta contra fuentes. Filtra y toca una prueba para ver el detalle.</p>
-  <div class="filtros" id="filtros" role="group" aria-label="Filtrar pruebas"></div>
-  <div class="pruebas" id="listaPruebas"></div>
-  <div class="card" id="detallePrueba" aria-live="polite"></div>
-</section>
-
-<section id="resumen">
-  <h2>Resultados</h2>
-  <p class="sub">Qué tan bien clasificó la IA, comparada con las fuentes.</p>
-  <div class="card">
-    <strong>Clasificación de las 10 pruebas</strong>
-    <div class="apilada" role="img" aria-label="40 por ciento correctas, 30 por ciento parciales, 10 por ciento incorrectas, 20 por ciento sin fuente">
-      <div class="a-ok" style="width:40%">40 %</div>
-      <div class="a-parcial" style="width:30%">30 %</div>
-      <div class="a-mal" style="width:10%">10 %</div>
-      <div class="a-sin" style="width:20%">20 %</div>
+    <div class="final" id="final" hidden>
+      <span class="copa" id="copa" aria-hidden="true"></span>
+      <h3 id="finalTitulo"></h3>
+      <p id="finalTexto"></p>
+      <button type="button" class="boton" id="otra">Jugar otra vez</button>
     </div>
-    <div class="leyenda">
-      <span><b style="color:#2e7d32">■</b> Correcta: 4</span>
-      <span><b style="color:#b26a00">■</b> Parcial: 3</span>
-      <span><b style="color:#b3261e">■</b> Incorrecta: 1</span>
-      <span><b style="color:#5f6b73">■</b> Sin fuente: 2</span>
-    </div>
-  </div>
-  <div class="nums" style="margin-top:14px">
-    <div class="card num"><b>50 %</b><span>correctas, de las 8 que se pudieron verificar</span></div>
-    <div class="card num"><b>88 %</b><span>correctas al menos en parte</span></div>
-    <div class="card num"><b>2 de 10</b><span>fotos con el material mal identificado</span></div>
-    <div class="card num"><b>≈ 4.4</b><span>créditos de Make por foto</span></div>
-  </div>
-  <div class="card" style="margin-top:14px">
-    <strong>Qué aprendimos</strong>
-    <ul>
-      <li>Acierta en empaques comunes, como botellas y bolsas de botana.</li>
-      <li>Si se equivoca en el material, también se equivoca en si se recicla, el contenedor y el tiempo de degradación.</li>
-      <li>Los tiempos de degradación son estimaciones inciertas: las fuentes no coinciden entre sí.</li>
-      <li>Sirve como guía inicial, siempre que se revise lo que responde.</li>
-    </ul>
   </div>
 </section>
 
 </main>
 
 <footer>
-  Práctica 3.3 · Desarrollo Sustentable · Instituto Tecnológico de Mazatlán<br>
-  Instrucciones de la IA redactadas por Claude (Anthropic).<br>
-  Datos y fuentes completas en el
-  <a href="https://github.com/roblescamposcarlos-beep/Clasificador_Residuos" target="_blank" rel="noopener noreferrer">repositorio de la práctica</a>.
+  Desarrollo Sustentable · Instituto Tecnológico de Mazatlán<br>
+  Instrucciones de la IA redactadas por <b>Claude</b> (Anthropic).
 </footer>
 
 <script>
-  const IMG = "https://raw.githubusercontent.com/roblescamposcarlos-beep/Clasificador_Residuos/main/imagenes/";
+  var reducir = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const TEMAS = [
-    { t: "Clasificar los residuos", c: "En México la ley separa residuos urbanos, de manejo especial y peligrosos.",
-      m: "La Ley General para la Prevención y Gestión Integral de los Residuos (LGPGIR) los clasifica y permite separar los urbanos en orgánicos e inorgánicos. De ahí salen las 4 categorías que usa el bot: orgánico, inorgánico reciclable, inorgánico no reciclable y manejo especial o peligroso." },
-    { t: "Impacto en el mar de Mazatlán", c: "La basura llega a las playas y al agua como plástico y microplásticos.",
-      m: "A diario se retiran de 200 a 300 kilos de basura de las playas, una limpieza de 4 km evitó que 1.4 toneladas llegaran al mar, y la UNAM encontró microplásticos en la arena y el agua de la bahía." },
-    { t: "Responsabilidad compartida", c: "Reciclar no depende de una sola persona.",
-      m: "Al ciudadano le toca separar bien; al municipio, recolectar y dar disposición final; y a la empresa, diseñar envases que se puedan reciclar. Si una parte falla, el esfuerzo de las otras se pierde." }
+  /* ---------- Tarjetas de la materia ---------- */
+  var TARJETAS = [
+    { clase: "c1", ico: "🗂️", t: "Clasificar residuos", d: "Orgánico, reciclable, no reciclable o peligroso." },
+    { clase: "c2", ico: "🌊", t: "Impacto en el mar", d: "La basura y el plástico llegan a las playas." },
+    { clase: "c3", ico: "🤝", t: "Responsabilidad compartida", d: "Ciudadanos, gobierno y empresas: todos." }
   ];
-
-  const PASOS = [
-    { n: "Telegram: Watch Updates", d: "Recibe cada mensaje o foto que llega al bot. El token del bot se guarda solo en Make.", c: "Webhook vinculado con setWebhook" },
-    { n: "Router con filtros", d: "Si el mensaje trae foto, sigue a clasificarla. Si no, el bot pide que envíen una foto.", c: "Filtros «Tiene foto» y «No tiene foto»" },
-    { n: "Telegram: Download a File", d: "Descarga la foto en su mejor calidad (Telegram la envía en varios tamaños).", c: "File ID = last(map(1.message.photo; \"file_id\"))" },
-    { n: "Make AI Agent (con visión)", d: "La IA mira la imagen y responde con el formato fijo de las instrucciones. Usa la conexión Make's AI Provider.", c: "Input: «Clasifica el residuo de la imagen.»" },
-    { n: "Telegram: Send a Reply", d: "Manda la respuesta de la IA al mismo chat de donde llegó la foto.", c: "Chat ID = Message → Chat → ID" }
-  ];
-
-  const FORMATO =
-`Eres un asesor de separación de residuos para alumnos de Desarrollo Sustentable del TecNM en Mazatlán, Sinaloa.
-
-Recibirás la foto de un residuo. Responde en texto plano (sin asteriscos, sin markdown), en español, con este formato:
-
-Residuo: [qué es]
-Material: [material principal]
-Clasificación: [orgánico / inorgánico reciclable / inorgánico no reciclable / manejo especial o peligroso]
-¿Se recicla?: [sí / no / depende, con una línea de explicación]
-Dónde va: [contenedor o lugar de acopio]
-Tiempo aproximado de degradación: [tiempo]
-Consejo: [1 línea para reducir o reutilizar este residuo]`;
-
-  const REGLAS =
-`Antes de responder, observa bien toda la imagen y describe solo lo que realmente se ve; no inventes objetos que no aparezcan. Si en la foto hay varios residuos distintos, identifica el que ocupa el centro o la mayor parte de la imagen y, en la línea Consejo, menciona brevemente los demás que veas y que conviene separar por material.
-
-Si la imagen no muestra un residuo o no se distingue, responde: "No pude identificar el residuo, envía otra foto más clara."
-
-Si es un residuo peligroso (pilas, medicamentos, aceite, químicos), indícalo y recomienda no tirarlo a la basura común.`;
-
-  const PRUEBAS = [
-    { n: 1, r: "Bolsa de botana", f: "prueba_01_bolsa_snack.webp", e: "ok", cl: "Inorgánico no reciclable", ti: "500 años", tf: "Bolsa de plástico: 20 años (estimación). No coincide.", rec: "Depende; a menudo no, por ser multicapa. Coincide con la fuente." },
-    { n: 2, r: "Envoltorio plástico y caja de cartón", f: "prueba_02_envoltorio_bolsa_negra.webp", e: "parcial", cl: "Inorgánico reciclable", ti: "100 a 500 años", tf: "Bolsa 20 años, botella 450, cartón 2 meses. Parcial.", rec: "El cartón sí; el envoltorio flexible es difícil de reciclar. Coincide en el envoltorio." },
-    { n: 3, r: "Bandeja roja de plástico", f: "prueba_03_bandeja_roja.webp", e: "ok", cl: "Inorgánico reciclable", ti: "100 a 500 años", tf: "Jarra de plástico: 100 años. Coincide.", rec: "Sí, depende del programa local. Sin fuente verificada." },
-    { n: 4, r: "Bolsa de basura negra", f: "prueba_04_bolsa_basura_negra.webp", e: "sin", cl: "Inorgánico no reciclable", ti: "450 a 1000 años", tf: "Bolsa de plástico: 20 años. No coincide.", rec: "No. Sin fuente verificada." },
-    { n: 5, r: "Cajas de plástico para almacenaje", f: "prueba_05_cajas_plasticas.webp", e: "ok", cl: "Inorgánico reciclable", ti: "100 a 500 años", tf: "Jarra de plástico (HDPE): 100 años. Coincide.", rec: "Sí. Probable: la resina no se confirmó." },
-    { n: 6, r: "Papel picado", f: "prueba_06_adornos_recortados.webp", e: "parcial", cl: "Inorgánico reciclable (la IA lo creyó plástico)", ti: "100 a 500 años", tf: "Periódico: 6 semanas; cartón: 2 meses. No coincide.", rec: "La IA razonó con el material equivocado, era papel. Correcta por casualidad." },
-    { n: 7, r: "Palets de madera", f: "prueba_07_palets_madera.webp", e: "parcial", cl: "Orgánico", ti: "2 a 5 años", tf: "Madera contrachapada: 3 años. Coincide.", rec: "Sí, depende. En 2018 se recicló el 17.1 % de los palets en EE. UU. Clasificarlo como orgánico es discutible." },
-    { n: 8, r: "Estaca de PVC", f: "prueba_08_tutor_pvc.webp", e: "sin", cl: "Inorgánico reciclable", ti: "Cientos de años", tf: "Plásticos: 100 a 450 años. Parcial.", rec: "Depende; no todos los recicladores aceptan PVC. Sin fuente verificada." },
-    { n: 9, r: "Tablón de madera", f: "prueba_09_tapa_tablon.webp", e: "mal", cl: "Inorgánico no reciclable (la IA dijo «tapa de plástico»)", ti: "Cerca de 500 años", tf: "Madera contrachapada: 3 años. No coincide.", rec: "La respuesta habla de plástico, pero era madera. No coincide." },
-    { n: 10, r: "Botella de plástico", f: "prueba_10_botella_bebida.webp", e: "ok", cl: "Inorgánico reciclable", ti: "400 años", tf: "Botella de plástico: 450 años. Coincide.", rec: "Sí. En 2018 se reciclaron el 29.1 % de las botellas de PET en EE. UU." }
-  ];
-
-  const ETIQ = {
-    ok: { t: "Correcta", c: "e-ok" },
-    parcial: { t: "Parcial", c: "e-parcial" },
-    mal: { t: "Incorrecta", c: "e-mal" },
-    sin: { t: "Sin fuente", c: "e-sin" }
-  };
-
-  // Temas de la materia
-  const temas = document.getElementById("temas");
-  TEMAS.forEach(function (x) {
-    const b = document.createElement("button");
+  var cont = document.getElementById("tarjetas");
+  TARJETAS.forEach(function (x) {
+    var b = document.createElement("button");
     b.type = "button";
-    b.className = "tema";
-    b.setAttribute("aria-expanded", "false");
-    const s = document.createElement("strong"); s.textContent = x.t;
-    const c = document.createElement("span"); c.className = "corto"; c.textContent = x.c;
-    const m = document.createElement("div"); m.className = "mas"; m.textContent = x.m;
-    b.append(s, c, m);
-    b.addEventListener("click", function () {
-      b.setAttribute("aria-expanded", b.getAttribute("aria-expanded") === "true" ? "false" : "true");
-    });
-    temas.appendChild(b);
-  });
-
-  // Flujo
-  const flujo = document.getElementById("flujo");
-  const detallePaso = document.getElementById("detallePaso");
-  function mostrarPaso(i) {
-    Array.prototype.forEach.call(flujo.querySelectorAll(".paso"), function (b, j) {
-      b.setAttribute("aria-pressed", j === i ? "true" : "false");
-    });
-    const p = PASOS[i];
-    detallePaso.textContent = "";
-    const h = document.createElement("h3"); h.textContent = (i + 1) + ". " + p.n;
-    const d = document.createElement("p"); d.style.margin = "0 0 6px"; d.textContent = p.d;
-    const c = document.createElement("span"); c.className = "mini";
-    const code = document.createElement("code"); code.textContent = p.c;
-    c.appendChild(code);
-    detallePaso.append(h, d, c);
-  }
-  PASOS.forEach(function (p, i) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "paso";
-    b.textContent = p.n;
+    b.className = "giro " + x.clase;
     b.setAttribute("aria-pressed", "false");
-    b.addEventListener("click", function () { mostrarPaso(i); });
-    flujo.appendChild(b);
-    if (i < PASOS.length - 1) {
-      const f = document.createElement("span"); f.className = "flecha"; f.setAttribute("aria-hidden", "true"); f.textContent = "→";
-      flujo.appendChild(f);
-    }
-  });
-  mostrarPaso(0);
-
-  // Instrucciones
-  const codigo = document.getElementById("codigo");
-  const verBase = document.getElementById("verBase");
-  const verReglas = document.getElementById("verReglas");
-  function ver(cual) {
-    codigo.textContent = cual === "base" ? FORMATO : REGLAS;
-    verBase.setAttribute("aria-pressed", cual === "base" ? "true" : "false");
-    verReglas.setAttribute("aria-pressed", cual === "reglas" ? "true" : "false");
-  }
-  verBase.addEventListener("click", function () { ver("base"); });
-  verReglas.addEventListener("click", function () { ver("reglas"); });
-  ver("base");
-
-  const msg = document.getElementById("msgCopia");
-  document.getElementById("copiar").addEventListener("click", async function () {
-    const texto = FORMATO + "\n\n" + REGLAS;
-    try {
-      await navigator.clipboard.writeText(texto);
-      msg.textContent = "Copiado.";
-    } catch (e) {
-      const area = document.createElement("textarea");
-      area.value = texto;
-      document.body.appendChild(area);
-      area.select();
-      try { document.execCommand("copy"); msg.textContent = "Copiado."; } catch (e2) { msg.textContent = "No se pudo copiar, selecciona el texto a mano."; }
-      area.remove();
-    }
-    setTimeout(function () { msg.textContent = ""; }, 2500);
+    b.setAttribute("aria-label", x.t + ". Toca para ver más.");
+    var dentro = document.createElement("span"); dentro.className = "giro-in";
+    var frente = document.createElement("span"); frente.className = "cara";
+    var ico = document.createElement("span"); ico.className = "ico"; ico.textContent = x.ico; ico.setAttribute("aria-hidden", "true");
+    var t = document.createElement("b"); t.textContent = x.t;
+    frente.append(ico, t);
+    var atras = document.createElement("span"); atras.className = "cara atras"; atras.textContent = x.d;
+    dentro.append(frente, atras);
+    b.appendChild(dentro);
+    b.addEventListener("click", function () {
+      var v = b.classList.toggle("volteada");
+      b.setAttribute("aria-pressed", v ? "true" : "false");
+    });
+    cont.appendChild(b);
   });
 
-  // Pruebas
-  const filtros = document.getElementById("filtros");
-  const lista = document.getElementById("listaPruebas");
-  const detallePrueba = document.getElementById("detallePrueba");
-  let filtroActual = "todas";
-  let seleccionada = null;
+  /* ---------- Datos animados ---------- */
+  var DATOS = [
+    { c: "d1", v: 4.4, dec: 1, pre: "≈", suf: "", t: "créditos por foto" },
+    { c: "d2", v: 7.5, dec: 1, pre: "≈", suf: " s", t: "en responder" },
+    { c: "d3", v: 7, dec: 0, pre: "", suf: "", t: "datos por cada foto", s: "qué es, material, categoría, si se recicla, a dónde va, degradación y consejo" },
+    { c: "d4", v: 4, dec: 0, pre: "", suf: "", t: "categorías de residuo" },
+    { c: "d5", v: 50, dec: 0, pre: "", suf: "%", t: "respuestas totalmente correctas", s: "de las que se pudieron verificar", anillo: true },
+    { c: "d6", v: 88, dec: 0, pre: "", suf: "%", t: "correctas al menos en parte", anillo: true },
+    { c: "d7", v: 2, dec: 0, pre: "", suf: " de 10", t: "fotos con el material mal identificado" }
+  ];
+  var lista = document.getElementById("listaDatos");
 
-  function etiqueta(e) {
-    const s = document.createElement("span");
-    s.className = "etiqueta " + ETIQ[e].c;
-    s.textContent = ETIQ[e].t;
-    return s;
-  }
-
-  function dibujarDetalle() {
-    detallePrueba.textContent = "";
-    if (seleccionada === null) {
-      detallePrueba.textContent = "Toca una prueba para ver qué respondió la IA y qué dicen las fuentes.";
+  function contar(card) {
+    var num = card.querySelector(".n");
+    var v = parseFloat(num.dataset.v), dec = parseInt(num.dataset.dec, 10);
+    var anillo = card.querySelector(".anillo");
+    if (reducir) {
+      num.textContent = v.toFixed(dec);
+      if (anillo) anillo.style.setProperty("--p", v);
       return;
     }
-    const p = PRUEBAS.filter(function (x) { return x.n === seleccionada; })[0];
-    const h = document.createElement("h3");
-    h.textContent = "Prueba " + p.n + ": " + p.r + " ";
-    h.appendChild(etiqueta(p.e));
-    const fila = document.createElement("div"); fila.className = "detalle-fila";
-    const img = document.createElement("img");
-    img.src = IMG + p.f; img.alt = "Captura de la prueba " + p.n + ": " + p.r; img.loading = "lazy";
-    img.addEventListener("error", function () { img.remove(); });
-    const dl = document.createElement("dl");
-    [["Clasificación de la IA", p.cl], ["Tiempo de degradación (IA)", p.ti], ["Según la fuente", p.tf], ["¿Se recicla?", p.rec]].forEach(function (par) {
-      const dt = document.createElement("dt"); dt.textContent = par[0];
-      const dd = document.createElement("dd"); dd.textContent = par[1];
-      dl.append(dt, dd);
-    });
-    fila.append(img, dl);
-    detallePrueba.append(h, fila);
+    var t0 = performance.now(), dur = 1300;
+    function paso(t) {
+      var k = Math.min(1, (t - t0) / dur);
+      var e = 1 - Math.pow(1 - k, 3);
+      num.textContent = (v * e).toFixed(dec);
+      if (anillo) anillo.style.setProperty("--p", v * e);
+      if (k < 1) requestAnimationFrame(paso);
+    }
+    requestAnimationFrame(paso);
   }
 
-  function dibujarLista() {
-    lista.textContent = "";
-    PRUEBAS.filter(function (p) { return filtroActual === "todas" || p.e === filtroActual; }).forEach(function (p) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "prueba";
-      b.setAttribute("aria-pressed", seleccionada === p.n ? "true" : "false");
-      const foto = document.createElement("div"); foto.className = "foto";
-      const img = document.createElement("img");
-      img.src = IMG + p.f; img.alt = ""; img.loading = "lazy";
-      img.addEventListener("error", function () { img.remove(); foto.textContent = "Sin foto"; });
-      foto.appendChild(img);
-      const txt = document.createElement("div"); txt.className = "txt";
-      const t = document.createElement("div"); t.textContent = p.n + ". " + p.r; t.style.marginBottom = "4px";
-      txt.append(t, etiqueta(p.e));
-      b.append(foto, txt);
-      b.addEventListener("click", function () { seleccionada = p.n; dibujarLista(); dibujarDetalle(); });
-      lista.appendChild(b);
-    });
-  }
-
-  [["todas", "Todas"], ["ok", "Correctas"], ["parcial", "Parciales"], ["mal", "Incorrectas"], ["sin", "Sin fuente"]].forEach(function (f) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.textContent = f[1];
-    b.setAttribute("aria-pressed", f[0] === "todas" ? "true" : "false");
-    b.addEventListener("click", function () {
-      filtroActual = f[0];
-      Array.prototype.forEach.call(filtros.children, function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
-      dibujarLista();
-    });
-    filtros.appendChild(b);
+  DATOS.forEach(function (x) {
+    var card = document.createElement("div");
+    card.className = "dato " + x.c;
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", x.v + x.suf + " " + x.t + ". Toca para repetir la animación.");
+    var gran = document.createElement("div"); gran.className = "gran";
+    if (x.pre) gran.appendChild(document.createTextNode(x.pre));
+    var n = document.createElement("span"); n.className = "n"; n.dataset.v = x.v; n.dataset.dec = x.dec; n.textContent = "0";
+    gran.appendChild(n);
+    if (x.suf) gran.appendChild(document.createTextNode(x.suf));
+    if (x.anillo) {
+      var an = document.createElement("div"); an.className = "anillo";
+      var ce = document.createElement("div"); ce.className = "centro";
+      ce.appendChild(gran); an.appendChild(ce);
+      card.appendChild(an);
+    } else {
+      card.appendChild(gran);
+    }
+    var p = document.createElement("p"); p.textContent = x.t;
+    card.appendChild(p);
+    if (x.s) { var s = document.createElement("small"); s.textContent = x.s; card.appendChild(s); }
+    card.addEventListener("click", function () { contar(card); });
+    card.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); contar(card); } });
+    lista.appendChild(card);
   });
 
-  dibujarLista();
-  dibujarDetalle();
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (items) {
+      items.forEach(function (it) {
+        if (it.isIntersecting) { contar(it.target); obs.unobserve(it.target); }
+      });
+    }, { threshold: 0.4 });
+    Array.prototype.forEach.call(lista.children, function (c) { obs.observe(c); });
+  } else {
+    Array.prototype.forEach.call(lista.children, contar);
+  }
+
+  /* ---------- Juego ---------- */
+  var CATS = [
+    { id: "organico", nombre: "Orgánico", ico: "🍃", clase: "o-organico" },
+    { id: "reciclable", nombre: "Reciclable", ico: "♻️", clase: "o-reciclable" },
+    { id: "noreciclable", nombre: "No reciclable", ico: "🗑️", clase: "o-noreciclable" },
+    { id: "peligroso", nombre: "Peligroso o especial", ico: "⚠️", clase: "o-peligroso" }
+  ];
+  var OBJETOS = [
+    { e: "🍌", n: "Cáscara de plátano", c: "organico", d: "Se puede compostar y volver a la tierra." },
+    { e: "🥬", n: "Restos de verdura", c: "organico", d: "Se compostan y sirven de abono." },
+    { e: "🍂", n: "Hojas secas", c: "organico", d: "Son abono natural para las plantas." },
+    { e: "🍎", n: "Corazón de manzana", c: "organico", d: "Los restos de fruta se pueden compostar." },
+    { e: "🥤", n: "Botella de plástico", c: "reciclable", d: "Tarda unos 450 años en degradarse (estimación)." },
+    { e: "🥫", n: "Lata de refresco", c: "reciclable", d: "El aluminio y el acero se reciclan muchas veces." },
+    { e: "📄", n: "Hoja de papel limpia", c: "reciclable", d: "El papel limpio se recicla." },
+    { e: "🫙", n: "Frasco de vidrio", c: "reciclable", d: "El vidrio se puede reciclar muchas veces." },
+    { e: "📦", n: "Caja de cartón limpia", c: "reciclable", d: "Limpia y seca se recicla; con grasa, no." },
+    { e: "🥡", n: "Vaso de unicel", c: "noreciclable", d: "Casi no se recicla y se rompe en pedacitos." },
+    { e: "🍿", n: "Bolsa de botana", c: "noreciclable", d: "Tiene varias capas pegadas: es muy difícil de reciclar." },
+    { e: "🚬", n: "Colilla de cigarro", c: "noreciclable", d: "Son de lo más común en las limpiezas de playas." },
+    { e: "🔋", n: "Pila", c: "peligroso", d: "Lleva metales pesados: nunca a la basura común." },
+    { e: "💊", n: "Medicamento caducado", c: "peligroso", d: "Va a un punto de acopio, no al drenaje." },
+    { e: "🛢️", n: "Aceite de cocina usado", c: "peligroso", d: "No va al drenaje: contamina el agua." },
+    { e: "📱", n: "Celular viejo", c: "peligroso", d: "Los aparatos electrónicos van a centros de acopio." }
+  ];
+  var TOTAL = 10;
+  var ronda, idx, puntos, racha, respondida;
+
+  var elProgreso = document.getElementById("progreso");
+  var elRacha = document.getElementById("racha");
+  var elPuntos = document.getElementById("puntos");
+  var elBarra = document.getElementById("barra");
+  var elEmoji = document.getElementById("emoji");
+  var elNombre = document.getElementById("nombre");
+  var elOpciones = document.getElementById("opciones");
+  var elFeedback = document.getElementById("feedback");
+  var btnSig = document.getElementById("siguiente");
+  var elPartida = document.getElementById("partida");
+  var elFinal = document.getElementById("final");
+
+  function mezclar(a) {
+    var r = a.slice();
+    for (var i = r.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = r[i]; r[i] = r[j]; r[j] = t;
+    }
+    return r;
+  }
+
+  function empezar() {
+    ronda = mezclar(OBJETOS).slice(0, TOTAL);
+    idx = 0; puntos = 0; racha = 0;
+    elPartida.hidden = false;
+    elFinal.hidden = true;
+    mostrar();
+  }
+
+  function mostrar() {
+    respondida = false;
+    var o = ronda[idx];
+    elProgreso.textContent = "Residuo " + (idx + 1) + " de " + TOTAL;
+    elPuntos.textContent = puntos;
+    elRacha.textContent = racha >= 2 ? "🔥 Racha de " + racha : "";
+    elBarra.style.width = (idx / TOTAL * 100) + "%";
+    elEmoji.textContent = o.e;
+    elEmoji.classList.remove("nuevo");
+    void elEmoji.offsetWidth;
+    elEmoji.classList.add("nuevo");
+    elNombre.textContent = o.n;
+    elFeedback.textContent = "";
+    elFeedback.className = "";
+    btnSig.hidden = true;
+    elOpciones.textContent = "";
+    CATS.forEach(function (c) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "opcion " + c.clase;
+      b.dataset.cat = c.id;
+      var i = document.createElement("span"); i.className = "oi"; i.textContent = c.ico; i.setAttribute("aria-hidden", "true");
+      var t = document.createElement("span"); t.textContent = c.nombre;
+      b.append(i, t);
+      b.addEventListener("click", function () { responder(c.id, b); });
+      elOpciones.appendChild(b);
+    });
+  }
+
+  function responder(cat, boton) {
+    if (respondida) return;
+    respondida = true;
+    var o = ronda[idx];
+    var bien = cat === o.c;
+    Array.prototype.forEach.call(elOpciones.children, function (b) {
+      b.disabled = true;
+      if (b.dataset.cat === o.c) b.classList.add("correcta");
+      else if (b === boton) b.classList.add("mal");
+      else b.classList.add("mal");
+    });
+    if (bien) {
+      puntos += 10; racha += 1;
+      elFeedback.className = "bien";
+      elFeedback.textContent = "¡Correcto! " + o.d;
+    } else {
+      racha = 0;
+      var nombre = CATS.filter(function (c) { return c.id === o.c; })[0].nombre;
+      elFeedback.className = "error";
+      elFeedback.textContent = "Va en: " + nombre + ". " + o.d;
+    }
+    elPuntos.textContent = puntos;
+    elRacha.textContent = racha >= 2 ? "🔥 Racha de " + racha : "";
+    elBarra.style.width = ((idx + 1) / TOTAL * 100) + "%";
+    btnSig.textContent = idx + 1 === TOTAL ? "Ver mi resultado" : "Siguiente";
+    btnSig.hidden = false;
+    btnSig.focus();
+  }
+
+  btnSig.addEventListener("click", function () {
+    idx += 1;
+    if (idx >= TOTAL) terminar(); else mostrar();
+  });
+
+  function terminar() {
+    elPartida.hidden = true;
+    elFinal.hidden = false;
+    var aciertos = puntos / 10;
+    var copa, titulo, texto;
+    if (aciertos >= 9) { copa = "🏆"; titulo = "¡Experto en residuos!"; texto = "Clasificaste " + aciertos + " de " + TOTAL + ". Ya puedes darle clases a la IA."; }
+    else if (aciertos >= 6) { copa = "🌟"; titulo = "¡Muy bien!"; texto = "Clasificaste " + aciertos + " de " + TOTAL + ". Casi eres un experto."; }
+    else { copa = "🌱"; titulo = "¡Sigue practicando!"; texto = "Clasificaste " + aciertos + " de " + TOTAL + ". Con otra ronda mejoras seguro."; }
+    document.getElementById("copa").textContent = copa;
+    document.getElementById("finalTitulo").textContent = titulo;
+    document.getElementById("finalTexto").textContent = texto;
+    if (aciertos >= 6) confeti();
+  }
+
+  document.getElementById("otra").addEventListener("click", empezar);
+
+  /* ---------- Confeti ---------- */
+  function confeti() {
+    if (reducir) return;
+    var cv = document.getElementById("confeti");
+    var cx = cv.getContext("2d");
+    cv.width = window.innerWidth; cv.height = window.innerHeight;
+    var colores = ["#7cffb2", "#ffd93d", "#ff6b9d", "#4dd9ff", "#8b6cff", "#ff9f43"];
+    var ps = [];
+    for (var i = 0; i < 140; i++) {
+      ps.push({
+        x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * 0.5,
+        vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 4,
+        r: 4 + Math.random() * 6, c: colores[i % colores.length], a: Math.random() * 6
+      });
+    }
+    var t0 = performance.now();
+    function f(t) {
+      cx.clearRect(0, 0, cv.width, cv.height);
+      ps.forEach(function (p) {
+        p.x += p.vx; p.y += p.vy; p.a += 0.15;
+        cx.save(); cx.translate(p.x, p.y); cx.rotate(p.a);
+        cx.fillStyle = p.c; cx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * 0.6);
+        cx.restore();
+      });
+      if (t - t0 < 3000) requestAnimationFrame(f); else cx.clearRect(0, 0, cv.width, cv.height);
+    }
+    requestAnimationFrame(f);
+  }
+
+  empezar();
 </script>
 </body>
 </html>
