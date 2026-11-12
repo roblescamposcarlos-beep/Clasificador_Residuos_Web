@@ -416,6 +416,42 @@
   }
   .boton-tg:hover { transform: scale(1.06) rotate(-1deg); }
 
+  /* ---------- Escenario armado ---------- */
+  .esc-lienzo {
+    background-color: rgba(14, 10, 48, 0.55);
+    background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1.5px, transparent 1.5px);
+    background-size: 26px 26px;
+    border: 3px solid var(--borde);
+    border-radius: 24px;
+    overflow-x: auto;
+    padding: 8px;
+  }
+  .esc-lienzo svg { display: block; width: 100%; min-width: 900px; height: auto; }
+  .esc-lienzo .et { font-family: var(--titulo); font-size: 16px; font-weight: 600; fill: #ffffff; }
+  .esc-lienzo .et2 { font-family: var(--cuerpo); font-size: 13px; font-weight: 600; fill: rgba(255, 255, 255, 0.78); }
+  .esc-lienzo .nota-svg { font-family: var(--cuerpo); font-size: 13px; font-weight: 700; fill: #ff9a9a; }
+  .esc-lienzo .mod, .esc-lienzo .fil { cursor: pointer; }
+  .esc-lienzo .mc, .esc-lienzo .fc { transition: transform 0.2s; transform-box: fill-box; transform-origin: center; }
+  .esc-lienzo .mod:hover .mc, .esc-lienzo .mod.activo .mc, .esc-lienzo .fil:hover .fc, .esc-lienzo .fil.activo .fc { transform: scale(1.1); }
+  .esc-lienzo .mod.activo .mc { stroke: #ffd93d; stroke-width: 5; }
+  .esc-lienzo .fil.activo .fc { stroke: #ffd93d; stroke-width: 3; }
+  .esc-lienzo :focus-visible { outline: none; }
+  .esc-lienzo .mod:focus-visible .mc, .esc-lienzo .fil:focus-visible .fc { stroke: #ffd93d; stroke-width: 5; }
+  .esc-acciones { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0; }
+  .esc-acciones .boton.sec { background: #8b6cff; color: #ffffff; }
+  .esc-detalle {
+    background: var(--vidrio);
+    border: 2px solid var(--borde);
+    border-left: 8px solid var(--amarillo);
+    border-radius: 18px;
+    padding: 16px 20px;
+    min-height: 130px;
+  }
+  .esc-detalle h3 { margin: 0 0 6px; font-family: var(--titulo); font-size: 1.6rem; color: var(--amarillo); line-height: 1.15; }
+  .esc-detalle p { margin: 0 0 8px; font-size: 1.25rem; }
+  .esc-detalle .cfg { font-size: 1.1rem; color: var(--suave); }
+  .esc-detalle .cfg b { color: var(--verde); }
+
   footer { text-align: center; padding: 30px 16px 44px; color: var(--suave); font-size: 1.15rem; line-height: 1.5; }
   footer b { color: var(--amarillo); }
   :focus-visible { outline: 4px solid var(--amarillo); outline-offset: 3px; }
@@ -645,6 +681,7 @@
   <a href="#datos">Los datos</a>
   <a href="#probar">Pruébalo</a>
   <a href="#juego">Juega</a>
+  <a href="#escenario">Cómo se arma</a>
 </nav>
 
 <main>
@@ -715,6 +752,96 @@
   </div>
 </section>
 
+
+<section id="escenario">
+  <h2>Así se ve el <span>escenario</span> armado</h2>
+  <p class="pista">Toca un módulo o mira cómo viaja una foto. En el celular, desliza hacia los lados.</p>
+  <div class="esc-lienzo">
+    <svg viewBox="0 0 980 420" role="img" aria-label="Diagrama del escenario de Make: Watch Updates de Telegram, un Router con dos caminos; si trae foto la descarga, la IA la analiza y se envía la respuesta; si no trae foto se envía un saludo.">
+      <defs>
+        <linearGradient id="gTg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2aabee"/><stop offset="1" stop-color="#1a7fc7"/></linearGradient>
+        <linearGradient id="gRt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff7a00"/></linearGradient>
+        <linearGradient id="gAI" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a58bff"/><stop offset="1" stop-color="#6a52d8"/></linearGradient>
+        <linearGradient id="gEr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a8a"/><stop offset="1" stop-color="#e24a5a"/></linearGradient>
+        <marker id="flechaEsc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+      </defs>
+
+      <g fill="none" stroke="#ffffff" stroke-opacity="0.65" stroke-width="3" stroke-linecap="round" marker-end="url(#flechaEsc)">
+        <path d="M130 170 H218"/>
+        <path d="M298 158 C345 158 372 90 428 90"/>
+        <path d="M298 182 C345 182 372 320 428 320"/>
+        <path d="M512 90 H598"/>
+        <path d="M682 90 H768"/>
+      </g>
+      <path d="M810 130 V182" fill="none" stroke="#ff7b7b" stroke-width="3" stroke-dasharray="7 7" stroke-linecap="round" marker-end="url(#flechaEsc)"/>
+      <text class="nota-svg" x="824" y="158">si falla el formato</text>
+
+      <g class="fil" data-id="f1" tabindex="0" role="button" aria-label="Filtro: tiene foto">
+        <rect class="fc" x="300" y="106" width="108" height="30" rx="15" fill="#ffffff" stroke="#8b6cff" stroke-width="2"/>
+        <text x="354" y="127" text-anchor="middle" font-size="14" font-weight="700" fill="#2b1f6b" style="font-family:var(--cuerpo)">🔧 Tiene foto</text>
+      </g>
+      <g class="fil" data-id="f2" tabindex="0" role="button" aria-label="Filtro: no tiene foto">
+        <rect class="fc" x="316" y="238" width="120" height="30" rx="15" fill="#ffffff" stroke="#8b6cff" stroke-width="2"/>
+        <text x="376" y="259" text-anchor="middle" font-size="14" font-weight="700" fill="#2b1f6b" style="font-family:var(--cuerpo)">🔧 No tiene foto</text>
+      </g>
+
+      <g class="mod" data-id="m1" tabindex="0" role="button" aria-label="Módulo 1: Watch Updates de Telegram">
+        <circle class="mc" cx="90" cy="170" r="38" fill="url(#gTg)" stroke="#ffffff" stroke-opacity="0.75" stroke-width="3"/>
+        <text x="90" y="182" text-anchor="middle" font-size="34">📨</text>
+        <circle cx="122" cy="142" r="12" fill="#14112e" stroke="#ffffff" stroke-width="2"/><text x="122" y="147" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">1</text>
+        <text class="et" x="90" y="232" text-anchor="middle">Watch Updates</text>
+        <text class="et2" x="90" y="250" text-anchor="middle">Telegram</text>
+      </g>
+      <g class="mod" data-id="m2" tabindex="0" role="button" aria-label="Módulo 2: Router">
+        <circle class="mc" cx="260" cy="170" r="38" fill="url(#gRt)" stroke="#ffffff" stroke-opacity="0.75" stroke-width="3"/>
+        <text x="260" y="182" text-anchor="middle" font-size="34">🔀</text>
+        <circle cx="292" cy="142" r="12" fill="#14112e" stroke="#ffffff" stroke-width="2"/><text x="292" y="147" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">2</text>
+        <text class="et" x="260" y="232" text-anchor="middle">Router</text>
+        <text class="et2" x="260" y="250" text-anchor="middle">Elige el camino</text>
+      </g>
+      <g class="mod" data-id="m3" tabindex="0" role="button" aria-label="Módulo 3: Download a File de Telegram">
+        <circle class="mc" cx="470" cy="90" r="38" fill="url(#gTg)" stroke="#ffffff" stroke-opacity="0.75" stroke-width="3"/>
+        <text x="470" y="102" text-anchor="middle" font-size="34">📥</text>
+        <circle cx="502" cy="62" r="12" fill="#14112e" stroke="#ffffff" stroke-width="2"/><text x="502" y="67" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">3</text>
+        <text class="et" x="470" y="152" text-anchor="middle">Download a File</text>
+        <text class="et2" x="470" y="170" text-anchor="middle">Telegram</text>
+      </g>
+      <g class="mod" data-id="m4" tabindex="0" role="button" aria-label="Módulo 4: Make AI Agent">
+        <circle class="mc" cx="640" cy="90" r="38" fill="url(#gAI)" stroke="#ffffff" stroke-opacity="0.75" stroke-width="3"/>
+        <text x="640" y="102" text-anchor="middle" font-size="34">🧠</text>
+        <circle cx="672" cy="62" r="12" fill="#14112e" stroke="#ffffff" stroke-width="2"/><text x="672" y="67" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">4</text>
+        <text class="et" x="640" y="152" text-anchor="middle">Make AI Agent</text>
+        <text class="et2" x="640" y="170" text-anchor="middle">Ve la foto</text>
+      </g>
+      <g class="mod" data-id="m5" tabindex="0" role="button" aria-label="Módulo 5: Send a Reply de Telegram">
+        <circle class="mc" cx="810" cy="90" r="38" fill="url(#gTg)" stroke="#ffffff" stroke-opacity="0.75" stroke-width="3"/>
+        <text x="810" y="102" text-anchor="middle" font-size="34">💬</text>
+        <circle cx="842" cy="62" r="12" fill="#14112e" stroke="#ffffff" stroke-width="2"/><text x="842" y="67" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">5</text>
+        <text class="et" x="810" y="44" text-anchor="middle">Send a Reply</text>
+      </g>
+      <g class="mod" data-id="e1" tabindex="0" role="button" aria-label="Respaldo si falla el formato">
+        <circle class="mc" cx="810" cy="214" r="30" fill="url(#gEr)" stroke="#ffffff" stroke-opacity="0.75" stroke-width="3"/>
+        <text x="810" y="225" text-anchor="middle" font-size="28">🛟</text>
+        <text class="et" x="810" y="264" text-anchor="middle">Respaldo</text>
+        <text class="et2" x="810" y="282" text-anchor="middle">Texto simple</text>
+      </g>
+      <g class="mod" data-id="m6" tabindex="0" role="button" aria-label="Módulo 6: Send a Reply con el saludo">
+        <circle class="mc" cx="470" cy="320" r="38" fill="url(#gTg)" stroke="#ffffff" stroke-opacity="0.75" stroke-width="3"/>
+        <text x="470" y="332" text-anchor="middle" font-size="34">👋</text>
+        <circle cx="502" cy="292" r="12" fill="#14112e" stroke="#ffffff" stroke-width="2"/><text x="502" y="297" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">6</text>
+        <text class="et" x="470" y="382" text-anchor="middle">Send a Reply</text>
+        <text class="et2" x="470" y="400" text-anchor="middle">El saludo</text>
+      </g>
+
+      <circle id="escPunto" cx="90" cy="170" r="10" fill="#ffd93d" stroke="#ffffff" stroke-width="3" opacity="0"/>
+    </svg>
+  </div>
+  <div class="esc-acciones">
+    <button type="button" class="boton" id="escFoto">▶ Ver cómo viaja una foto</button>
+    <button type="button" class="boton sec" id="escTexto">👋 ¿Y si solo escriben texto?</button>
+  </div>
+  <div class="esc-detalle" id="escDetalle" aria-live="polite"></div>
+</section>
 </main>
 
 <footer>
@@ -1076,6 +1203,88 @@
   }
 
   empezar();
+
+  /* ---------- Escenario armado ---------- */
+  var ESC = {
+    m1: { x: 90, y: 170, t: "1 · Watch Updates (Telegram)", d: "Recibe todo lo que le llega al bot: fotos o mensajes de texto.", c: "El bot de Telegram queda conectado a Make con un webhook." },
+    m2: { x: 260, y: 170, t: "2 · Router", d: "Decide por cuál camino sigue el mensaje: arriba si trae foto, abajo si solo es texto.", c: "Cada camino tiene su filtro." },
+    f1: { x: 354, y: 123, t: "Filtro: Tiene foto", d: "Deja pasar solo los mensajes que traen una foto.", c: "Condición: el campo <b>photo</b> del mensaje existe." },
+    f2: { x: 376, y: 253, t: "Filtro: No tiene foto", d: "Deja pasar los mensajes de texto, como /start o un simple «hola».", c: "Condición: el mensaje existe y <b>no</b> trae foto." },
+    m3: { x: 470, y: 90, t: "3 · Download a File (Telegram)", d: "Descarga la foto en su mejor calidad, porque Telegram la manda en varios tamaños.", c: "Toma el último tamaño de la lista de fotos." },
+    m4: { x: 640, y: 90, t: "4 · Make AI Agent", d: "La IA mira la foto y escribe el mensaje con emoji, etiqueta de color y los datos del residuo.", c: "Conexión: <b>Make's AI Provider</b> · Instrucciones redactadas por Claude." },
+    m5: { x: 810, y: 90, t: "5 · Send a Reply (Telegram)", d: "Manda la respuesta al mismo chat, con negritas y emojis.", c: "Formato: <b>HTML</b>. Si falla, entra el respaldo." },
+    e1: { x: 810, y: 214, t: "Respaldo si falla el formato", d: "Si Telegram rechaza el formato, manda el mismo mensaje en texto simple y el escenario sigue funcionando.", c: "Un envío en texto simple y después <b>Skip</b>." },
+    m6: { x: 470, y: 320, t: "6 · Send a Reply (el saludo)", d: "Saluda y explica cómo mandar la foto de un residuo, con un tip para que salga mejor.", c: "Formato: <b>HTML</b>." }
+  };
+  var escDetalle = document.getElementById("escDetalle");
+  var escPunto = document.getElementById("escPunto");
+  var escToken = 0;
+
+  function escMostrar(id) {
+    var o = ESC[id];
+    var gAct = document.querySelector("#escenario [data-id=\"" + id + "\"]");
+    if (gAct && gAct.scrollIntoView) { try { gAct.scrollIntoView({ inline: "center", block: "nearest", behavior: reducir ? "auto" : "smooth" }); } catch (e) {} }
+    Array.prototype.forEach.call(document.querySelectorAll("#escenario .mod, #escenario .fil"), function (g) {
+      g.classList.toggle("activo", g.getAttribute("data-id") === id);
+    });
+    escDetalle.textContent = "";
+    var h = document.createElement("h3"); h.textContent = o.t;
+    var p = document.createElement("p"); p.textContent = o.d;
+    var c = document.createElement("p"); c.className = "cfg"; c.innerHTML = o.c;
+    escDetalle.append(h, p, c);
+  }
+  function escLimpiar() {
+    Array.prototype.forEach.call(document.querySelectorAll("#escenario .mod, #escenario .fil"), function (g) { g.classList.remove("activo"); });
+    escPunto.setAttribute("opacity", "0");
+  }
+  function escEspera(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function escMover(x0, y0, x1, y1, ms, token) {
+    return new Promise(function (resolve) {
+      if (reducir) { resolve(); return; }
+      var t0 = performance.now();
+      escPunto.setAttribute("opacity", "1");
+      function paso(t) {
+        if (token !== escToken) { resolve(); return; }
+        var k = Math.min(1, (t - t0) / ms);
+        var e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        escPunto.setAttribute("cx", x0 + (x1 - x0) * e);
+        escPunto.setAttribute("cy", y0 + (y1 - y0) * e);
+        if (k < 1) requestAnimationFrame(paso); else resolve();
+      }
+      requestAnimationFrame(paso);
+    });
+  }
+  async function escRecorrer(ids) {
+    var token = ++escToken;
+    escLimpiar();
+    for (var i = 0; i < ids.length; i++) {
+      if (token !== escToken) return;
+      var o = ESC[ids[i]];
+      if (i > 0) {
+        var a = ESC[ids[i - 1]];
+        await escMover(a.x, a.y, o.x, o.y, 700, token);
+      } else {
+        escPunto.setAttribute("cx", o.x); escPunto.setAttribute("cy", o.y);
+        if (!reducir) escPunto.setAttribute("opacity", "1");
+      }
+      if (token !== escToken) return;
+      escMostrar(ids[i]);
+      await escEspera(1700);
+    }
+    if (token === escToken) escPunto.setAttribute("opacity", "0");
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("#escenario .mod, #escenario .fil"), function (g) {
+    function elegir() { escToken++; escPunto.setAttribute("opacity", "0"); escMostrar(g.getAttribute("data-id")); }
+    g.addEventListener("click", elegir);
+    g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); elegir(); } });
+  });
+  document.getElementById("escFoto").addEventListener("click", function () { escRecorrer(["m1", "m2", "f1", "m3", "m4", "m5"]); });
+  document.getElementById("escTexto").addEventListener("click", function () { escRecorrer(["m1", "m2", "f2", "m6"]); });
+  (function () {
+    var h = document.createElement("h3"); h.textContent = "Toca un módulo";
+    var p = document.createElement("p"); p.textContent = "O pulsa uno de los botones para ver cómo viaja un mensaje de principio a fin.";
+    escDetalle.append(h, p);
+  })();
 </script>
 </body>
 </html>
