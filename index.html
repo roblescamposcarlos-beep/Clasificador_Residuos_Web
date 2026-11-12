@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clasificador de residuos por foto</title>
+<style>
+  :root {
+    --bg: #f1f8f2;
+    --card: #ffffff;
+    --text: #1f2d26;
+    --muted: #55655c;
+    --line: #cfe3d3;
+    --verde: #2e7d32;
+    --verde-osc: #1b5e20;
+    --verde-cl: #e3f2e5;
+    --tierra: #6d4c41;
+    --ok: #2e7d32;
+    --parcial: #b26a00;
+    --mal: #b3261e;
+    --sin: #5f6b73;
+    --code: #14231b;
+    --code-text: #d8efdc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1a14;
+      --card: #172419;
+      --text: #e6f2e8;
+      --muted: #a4b8aa;
+      --line: #2a3f2f;
+      --verde: #66bb6a;
+      --verde-osc: #2e7d32;
+      --verde-cl: #1d3323;
+      --tierra: #d7b49e;
+      --ok: #7bd17f;
+      --parcial: #f0b35a;
+      --mal: #ff8a80;
+      --sin: #9fb0b8;
+      --code: #0a120d;
+      --code-text: #cfe9d3;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  header {
+    background: linear-gradient(135deg, var(--verde-osc), #3b8f3f);
+    color: #fff;
+    padding: 36px 16px 30px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 8px; font-size: clamp(1.6rem, 4vw, 2.3rem); }
+  header p { margin: 0 auto 14px; max-width: 680px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .chip {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.85rem;
+  }
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 8px 12px;
+    justify-content: center;
+  }
+  nav a {
+    color: var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.92rem;
+  }
+  nav a:hover { background: var(--verde-cl); }
+  main { max-width: 980px; margin: 0 auto; padding: 8px 16px 48px; }
+  section { margin-top: 36px; scroll-margin-top: 60px; }
+  h2 { margin: 0 0 6px; color: var(--verde); font-size: 1.45rem; }
+  .sub { margin: 0 0 16px; color: var(--muted); }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  button {
+    font: inherit;
+    cursor: pointer;
+    color: inherit;
+  }
+  .tema {
+    text-align: left;
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 6px solid var(--verde);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .tema:hover, .tema[aria-expanded="true"] { background: var(--verde-cl); }
+  .tema strong { display: block; font-size: 1.02rem; margin-bottom: 2px; }
+  .tema .corto { color: var(--muted); font-size: 0.92rem; }
+  .tema .mas { display: none; margin-top: 10px; font-size: 0.92rem; border-top: 1px dashed var(--line); padding-top: 8px; }
+  .tema[aria-expanded="true"] .mas { display: block; }
+  .flujo { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .paso {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.92rem;
+  }
+  .paso[aria-pressed="true"] { border-color: var(--verde); background: var(--verde-cl); font-weight: 600; }
+  .flecha { color: var(--muted); }
+  #detallePaso { margin-top: 12px; min-height: 92px; }
+  #detallePaso h3 { margin: 0 0 4px; font-size: 1.05rem; color: var(--verde); }
+  #detallePaso code, .mini code {
+    background: var(--verde-cl);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.88rem;
+    overflow-wrap: anywhere;
+  }
+  .autor {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: var(--verde-cl);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .autor .sello {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--verde);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+  }
+  .pestanas { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .pestanas button {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 14px;
+  }
+  .pestanas button[aria-pressed="true"] { background: var(--verde); color: #fff; border-color: var(--verde); }
+  pre {
+    margin: 0;
+    background: var(--code);
+    color: var(--code-text);
+    border-radius: 10px;
+    padding: 14px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    font-family: Consolas, "Courier New", monospace;
+  }
+  .barra-copia { display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    background: var(--verde);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    padding: 7px 14px;
+  }
+  .btn:hover { background: var(--verde-osc); }
+  .historia { margin-top: 12px; font-size: 0.93rem; }
+  .historia li { margin-bottom: 4px; }
+  .filtros { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .filtros button {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 0.9rem;
+  }
+  .filtros button[aria-pressed="true"] { background: var(--verde); color: #fff; border-color: var(--verde); }
+  .pruebas { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .prueba {
+    text-align: left;
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    padding: 0;
+    overflow: hidden;
+  }
+  .prueba[aria-pressed="true"] { border-color: var(--verde); box-shadow: 0 0 0 2px var(--verde-cl); }
+  .prueba .foto {
+    height: 100px;
+    background: var(--verde-cl);
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    overflow: hidden;
+  }
+  .prueba .foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .prueba .txt { padding: 8px 10px; font-size: 0.88rem; }
+  .etiqueta {
+    display: inline-block;
+    border-radius: 6px;
+    padding: 1px 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid currentColor;
+  }
+  .e-ok { color: var(--ok); }
+  .e-parcial { color: var(--parcial); }
+  .e-mal { color: var(--mal); }
+  .e-sin { color: var(--sin); }
+  #detallePrueba { margin-top: 14px; }
+  #detallePrueba h3 { margin: 0 0 8px; }
+  #detallePrueba dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 0.93rem; }
+  #detallePrueba dt { color: var(--muted); }
+  #detallePrueba dd { margin: 0; }
+  .detalle-fila { display: flex; gap: 14px; flex-wrap: wrap; }
+  .detalle-fila img { width: 180px; max-width: 100%; border-radius: 10px; border: 1px solid var(--line); }
+  .apilada { display: flex; height: 34px; border-radius: 8px; overflow: hidden; margin: 8px 0 10px; border: 1px solid var(--line); }
+  .apilada div { display: grid; place-items: center; font-size: 0.8rem; font-weight: 700; color: #fff; }
+  .a-ok { background: #2e7d32; }
+  .a-parcial { background: #b26a00; }
+  .a-mal { background: #b3261e; }
+  .a-sin { background: #5f6b73; }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--muted); }
+  .nums { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .num { text-align: center; }
+  .num b { display: block; font-size: 1.9rem; color: var(--verde); line-height: 1.1; }
+  .num span { color: var(--muted); font-size: 0.88rem; }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.88rem;
+    padding: 20px 16px 36px;
+    border-top: 1px solid var(--line);
+  }
+  footer a { color: var(--verde); }
+  :focus-visible { outline: 3px solid var(--verde); outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Clasificador de residuos por foto</h1>
+  <p>Un bot de Telegram que recibe la foto de un residuo y, con inteligencia artificial con visión, dice qué es, si se recicla y a dónde va.</p>
+  <div class="chips">
+    <span class="chip">Desarrollo Sustentable</span>
+    <span class="chip">Unidad 3 · Tema 3.3</span>
+    <span class="chip">Telegram + Make + IA</span>
+  </div>
+</header>
+
+<nav aria-label="Secciones">
+  <a href="#materia">La materia</a>
+  <a href="#base">En qué se basa</a>
+  <a href="#instrucciones">Instrucciones de la IA</a>
+  <a href="#pruebas">Pruebas</a>
+  <a href="#resumen">Resultados</a>
+</nav>
+
+<main>
+
+<section id="materia">
+  <h2>Qué usamos de la materia</h2>
+  <p class="sub">Tres ideas de Desarrollo Sustentable, en pocas palabras. Toca una para ver más.</p>
+  <div class="grid" id="temas"></div>
+</section>
+
+<section id="base">
+  <h2>En qué se basó</h2>
+  <p class="sub">Práctica 3.3, «Clasificador de residuos por foto»: impacto de las actividades humanas sobre la naturaleza. Toca cada paso del flujo.</p>
+  <div class="flujo" id="flujo" role="group" aria-label="Pasos del flujo"></div>
+  <div class="card" id="detallePaso" aria-live="polite"></div>
+</section>
+
+<section id="instrucciones">
+  <h2>Instrucciones de la IA</h2>
+  <p class="sub">El texto que le dice a la inteligencia artificial cómo reconocer y explicar cada foto.</p>
+  <div class="autor">
+    <div class="sello" aria-hidden="true">C</div>
+    <div>
+      <strong>Redactadas por Claude</strong><br>
+      Los textos de instrucciones para la IA de reconocimiento de fotos los redactó Claude, la IA de Anthropic, a partir de la guía de la práctica.
+    </div>
+  </div>
+  <div class="pestanas" role="group" aria-label="Versión de las instrucciones">
+    <button type="button" id="verBase" aria-pressed="true">Formato de respuesta</button>
+    <button type="button" id="verReglas" aria-pressed="false">Reglas de seguridad y precisión</button>
+  </div>
+  <pre id="codigo"></pre>
+  <div class="barra-copia">
+    <span id="msgCopia" class="sub" style="margin:0" aria-live="polite"></span>
+    <button type="button" class="btn" id="copiar">Copiar instrucciones completas</button>
+  </div>
+  <div class="card historia">
+    <strong>Cómo mejoraron con la primera prueba</strong>
+    <ol>
+      <li>Primera foto: vidrio y plástico entre piedras. El bot respondió «filtro de cigarro», lo cual era incorrecto.</li>
+      <li>Se agregaron dos reglas: describir solo lo que realmente se ve y, si hay varios residuos, clasificar el principal y mencionar los demás.</li>
+      <li>Segunda foto: una bolsa de botana. Esta vez la identificó bien y respondió con el formato completo. La foto de vidrio no se volvió a probar.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="pruebas">
+  <h2>Las 10 pruebas</h2>
+  <p class="sub">Se fotografiaron 10 residuos y se verificó cada respuesta contra fuentes. Filtra y toca una prueba para ver el detalle.</p>
+  <div class="filtros" id="filtros" role="group" aria-label="Filtrar pruebas"></div>
+  <div class="pruebas" id="listaPruebas"></div>
+  <div class="card" id="detallePrueba" aria-live="polite"></div>
+</section>
+
+<section id="resumen">
+  <h2>Resultados</h2>
+  <p class="sub">Qué tan bien clasificó la IA, comparada con las fuentes.</p>
+  <div class="card">
+    <strong>Clasificación de las 10 pruebas</strong>
+    <div class="apilada" role="img" aria-label="40 por ciento correctas, 30 por ciento parciales, 10 por ciento incorrectas, 20 por ciento sin fuente">
+      <div class="a-ok" style="width:40%">40 %</div>
+      <div class="a-parcial" style="width:30%">30 %</div>
+      <div class="a-mal" style="width:10%">10 %</div>
+      <div class="a-sin" style="width:20%">20 %</div>
+    </div>
+    <div class="leyenda">
+      <span><b style="color:#2e7d32">■</b> Correcta: 4</span>
+      <span><b style="color:#b26a00">■</b> Parcial: 3</span>
+      <span><b style="color:#b3261e">■</b> Incorrecta: 1</span>
+      <span><b style="color:#5f6b73">■</b> Sin fuente: 2</span>
+    </div>
+  </div>
+  <div class="nums" style="margin-top:14px">
+    <div class="card num"><b>50 %</b><span>correctas, de las 8 que se pudieron verificar</span></div>
+    <div class="card num"><b>88 %</b><span>correctas al menos en parte</span></div>
+    <div class="card num"><b>2 de 10</b><span>fotos con el material mal identificado</span></div>
+    <div class="card num"><b>≈ 4.4</b><span>créditos de Make por foto</span></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <strong>Qué aprendimos</strong>
+    <ul>
+      <li>Acierta en empaques comunes, como botellas y bolsas de botana.</li>
+      <li>Si se equivoca en el material, también se equivoca en si se recicla, el contenedor y el tiempo de degradación.</li>
+      <li>Los tiempos de degradación son estimaciones inciertas: las fuentes no coinciden entre sí.</li>
+      <li>Sirve como guía inicial, siempre que se revise lo que responde.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  Práctica 3.3 · Desarrollo Sustentable · Instituto Tecnológico de Mazatlán<br>
+  Instrucciones de la IA redactadas por Claude (Anthropic).<br>
+  Datos y fuentes completas en el
+  <a href="https://github.com/roblescamposcarlos-beep/Clasificador_Residuos" target="_blank" rel="noopener noreferrer">repositorio de la práctica</a>.
+</footer>
+
+<script>
+  const IMG = "https://raw.githubusercontent.com/roblescamposcarlos-beep/Clasificador_Residuos/main/imagenes/";
+
+  const TEMAS = [
+    { t: "Clasificar los residuos", c: "En México la ley separa residuos urbanos, de manejo especial y peligrosos.",
+      m: "La Ley General para la Prevención y Gestión Integral de los Residuos (LGPGIR) los clasifica y permite separar los urbanos en orgánicos e inorgánicos. De ahí salen las 4 categorías que usa el bot: orgánico, inorgánico reciclable, inorgánico no reciclable y manejo especial o peligroso." },
+    { t: "Impacto en el mar de Mazatlán", c: "La basura llega a las playas y al agua como plástico y microplásticos.",
+      m: "A diario se retiran de 200 a 300 kilos de basura de las playas, una limpieza de 4 km evitó que 1.4 toneladas llegaran al mar, y la UNAM encontró microplásticos en la arena y el agua de la bahía." },
+    { t: "Responsabilidad compartida", c: "Reciclar no depende de una sola persona.",
+      m: "Al ciudadano le toca separar bien; al municipio, recolectar y dar disposición final; y a la empresa, diseñar envases que se puedan reciclar. Si una parte falla, el esfuerzo de las otras se pierde." }
+  ];
+
+  const PASOS = [
+    { n: "Telegram: Watch Updates", d: "Recibe cada mensaje o foto que llega al bot. El token del bot se guarda solo en Make.", c: "Webhook vinculado con setWebhook" },
+    { n: "Router con filtros", d: "Si el mensaje trae foto, sigue a clasificarla. Si no, el bot pide que envíen una foto.", c: "Filtros «Tiene foto» y «No tiene foto»" },
+    { n: "Telegram: Download a File", d: "Descarga la foto en su mejor calidad (Telegram la envía en varios tamaños).", c: "File ID = last(map(1.message.photo; \"file_id\"))" },
+    { n: "Make AI Agent (con visión)", d: "La IA mira la imagen y responde con el formato fijo de las instrucciones. Usa la conexión Make's AI Provider.", c: "Input: «Clasifica el residuo de la imagen.»" },
+    { n: "Telegram: Send a Reply", d: "Manda la respuesta de la IA al mismo chat de donde llegó la foto.", c: "Chat ID = Message → Chat → ID" }
+  ];
+
+  const FORMATO =
+`Eres un asesor de separación de residuos para alumnos de Desarrollo Sustentable del TecNM en Mazatlán, Sinaloa.
+
+Recibirás la foto de un residuo. Responde en texto plano (sin asteriscos, sin markdown), en español, con este formato:
+
+Residuo: [qué es]
+Material: [material principal]
+Clasificación: [orgánico / inorgánico reciclable / inorgánico no reciclable / manejo especial o peligroso]
+¿Se recicla?: [sí / no / depende, con una línea de explicación]
+Dónde va: [contenedor o lugar de acopio]
+Tiempo aproximado de degradación: [tiempo]
+Consejo: [1 línea para reducir o reutilizar este residuo]`;
+
+  const REGLAS =
+`Antes de responder, observa bien toda la imagen y describe solo lo que realmente se ve; no inventes objetos que no aparezcan. Si en la foto hay varios residuos distintos, identifica el que ocupa el centro o la mayor parte de la imagen y, en la línea Consejo, menciona brevemente los demás que veas y que conviene separar por material.
+
+Si la imagen no muestra un residuo o no se distingue, responde: "No pude identificar el residuo, envía otra foto más clara."
+
+Si es un residuo peligroso (pilas, medicamentos, aceite, químicos), indícalo y recomienda no tirarlo a la basura común.`;
+
+  const PRUEBAS = [
+    { n: 1, r: "Bolsa de botana", f: "prueba_01_bolsa_snack.webp", e: "ok", cl: "Inorgánico no reciclable", ti: "500 años", tf: "Bolsa de plástico: 20 años (estimación). No coincide.", rec: "Depende; a menudo no, por ser multicapa. Coincide con la fuente." },
+    { n: 2, r: "Envoltorio plástico y caja de cartón", f: "prueba_02_envoltorio_bolsa_negra.webp", e: "parcial", cl: "Inorgánico reciclable", ti: "100 a 500 años", tf: "Bolsa 20 años, botella 450, cartón 2 meses. Parcial.", rec: "El cartón sí; el envoltorio flexible es difícil de reciclar. Coincide en el envoltorio." },
+    { n: 3, r: "Bandeja roja de plástico", f: "prueba_03_bandeja_roja.webp", e: "ok", cl: "Inorgánico reciclable", ti: "100 a 500 años", tf: "Jarra de plástico: 100 años. Coincide.", rec: "Sí, depende del programa local. Sin fuente verificada." },
+    { n: 4, r: "Bolsa de basura negra", f: "prueba_04_bolsa_basura_negra.webp", e: "sin", cl: "Inorgánico no reciclable", ti: "450 a 1000 años", tf: "Bolsa de plástico: 20 años. No coincide.", rec: "No. Sin fuente verificada." },
+    { n: 5, r: "Cajas de plástico para almacenaje", f: "prueba_05_cajas_plasticas.webp", e: "ok", cl: "Inorgánico reciclable", ti: "100 a 500 años", tf: "Jarra de plástico (HDPE): 100 años. Coincide.", rec: "Sí. Probable: la resina no se confirmó." },
+    { n: 6, r: "Papel picado", f: "prueba_06_adornos_recortados.webp", e: "parcial", cl: "Inorgánico reciclable (la IA lo creyó plástico)", ti: "100 a 500 años", tf: "Periódico: 6 semanas; cartón: 2 meses. No coincide.", rec: "La IA razonó con el material equivocado, era papel. Correcta por casualidad." },
+    { n: 7, r: "Palets de madera", f: "prueba_07_palets_madera.webp", e: "parcial", cl: "Orgánico", ti: "2 a 5 años", tf: "Madera contrachapada: 3 años. Coincide.", rec: "Sí, depende. En 2018 se recicló el 17.1 % de los palets en EE. UU. Clasificarlo como orgánico es discutible." },
+    { n: 8, r: "Estaca de PVC", f: "prueba_08_tutor_pvc.webp", e: "sin", cl: "Inorgánico reciclable", ti: "Cientos de años", tf: "Plásticos: 100 a 450 años. Parcial.", rec: "Depende; no todos los recicladores aceptan PVC. Sin fuente verificada." },
+    { n: 9, r: "Tablón de madera", f: "prueba_09_tapa_tablon.webp", e: "mal", cl: "Inorgánico no reciclable (la IA dijo «tapa de plástico»)", ti: "Cerca de 500 años", tf: "Madera contrachapada: 3 años. No coincide.", rec: "La respuesta habla de plástico, pero era madera. No coincide." },
+    { n: 10, r: "Botella de plástico", f: "prueba_10_botella_bebida.webp", e: "ok", cl: "Inorgánico reciclable", ti: "400 años", tf: "Botella de plástico: 450 años. Coincide.", rec: "Sí. En 2018 se reciclaron el 29.1 % de las botellas de PET en EE. UU." }
+  ];
+
+  const ETIQ = {
+    ok: { t: "Correcta", c: "e-ok" },
+    parcial: { t: "Parcial", c: "e-parcial" },
+    mal: { t: "Incorrecta", c: "e-mal" },
+    sin: { t: "Sin fuente", c: "e-sin" }
+  };
+
+  // Temas de la materia
+  const temas = document.getElementById("temas");
+  TEMAS.forEach(function (x) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "tema";
+    b.setAttribute("aria-expanded", "false");
+    const s = document.createElement("strong"); s.textContent = x.t;
+    const c = document.createElement("span"); c.className = "corto"; c.textContent = x.c;
+    const m = document.createElement("div"); m.className = "mas"; m.textContent = x.m;
+    b.append(s, c, m);
+    b.addEventListener("click", function () {
+      b.setAttribute("aria-expanded", b.getAttribute("aria-expanded") === "true" ? "false" : "true");
+    });
+    temas.appendChild(b);
+  });
+
+  // Flujo
+  const flujo = document.getElementById("flujo");
+  const detallePaso = document.getElementById("detallePaso");
+  function mostrarPaso(i) {
+    Array.prototype.forEach.call(flujo.querySelectorAll(".paso"), function (b, j) {
+      b.setAttribute("aria-pressed", j === i ? "true" : "false");
+    });
+    const p = PASOS[i];
+    detallePaso.textContent = "";
+    const h = document.createElement("h3"); h.textContent = (i + 1) + ". " + p.n;
+    const d = document.createElement("p"); d.style.margin = "0 0 6px"; d.textContent = p.d;
+    const c = document.createElement("span"); c.className = "mini";
+    const code = document.createElement("code"); code.textContent = p.c;
+    c.appendChild(code);
+    detallePaso.append(h, d, c);
+  }
+  PASOS.forEach(function (p, i) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "paso";
+    b.textContent = p.n;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { mostrarPaso(i); });
+    flujo.appendChild(b);
+    if (i < PASOS.length - 1) {
+      const f = document.createElement("span"); f.className = "flecha"; f.setAttribute("aria-hidden", "true"); f.textContent = "→";
+      flujo.appendChild(f);
+    }
+  });
+  mostrarPaso(0);
+
+  // Instrucciones
+  const codigo = document.getElementById("codigo");
+  const verBase = document.getElementById("verBase");
+  const verReglas = document.getElementById("verReglas");
+  function ver(cual) {
+    codigo.textContent = cual === "base" ? FORMATO : REGLAS;
+    verBase.setAttribute("aria-pressed", cual === "base" ? "true" : "false");
+    verReglas.setAttribute("aria-pressed", cual === "reglas" ? "true" : "false");
+  }
+  verBase.addEventListener("click", function () { ver("base"); });
+  verReglas.addEventListener("click", function () { ver("reglas"); });
+  ver("base");
+
+  const msg = document.getElementById("msgCopia");
+  document.getElementById("copiar").addEventListener("click", async function () {
+    const texto = FORMATO + "\n\n" + REGLAS;
+    try {
+      await navigator.clipboard.writeText(texto);
+      msg.textContent = "Copiado.";
+    } catch (e) {
+      const area = document.createElement("textarea");
+      area.value = texto;
+      document.body.appendChild(area);
+      area.select();
+      try { document.execCommand("copy"); msg.textContent = "Copiado."; } catch (e2) { msg.textContent = "No se pudo copiar, selecciona el texto a mano."; }
+      area.remove();
+    }
+    setTimeout(function () { msg.textContent = ""; }, 2500);
+  });
+
+  // Pruebas
+  const filtros = document.getElementById("filtros");
+  const lista = document.getElementById("listaPruebas");
+  const detallePrueba = document.getElementById("detallePrueba");
+  let filtroActual = "todas";
+  let seleccionada = null;
+
+  function etiqueta(e) {
+    const s = document.createElement("span");
+    s.className = "etiqueta " + ETIQ[e].c;
+    s.textContent = ETIQ[e].t;
+    return s;
+  }
+
+  function dibujarDetalle() {
+    detallePrueba.textContent = "";
+    if (seleccionada === null) {
+      detallePrueba.textContent = "Toca una prueba para ver qué respondió la IA y qué dicen las fuentes.";
+      return;
+    }
+    const p = PRUEBAS.filter(function (x) { return x.n === seleccionada; })[0];
+    const h = document.createElement("h3");
+    h.textContent = "Prueba " + p.n + ": " + p.r + " ";
+    h.appendChild(etiqueta(p.e));
+    const fila = document.createElement("div"); fila.className = "detalle-fila";
+    const img = document.createElement("img");
+    img.src = IMG + p.f; img.alt = "Captura de la prueba " + p.n + ": " + p.r; img.loading = "lazy";
+    img.addEventListener("error", function () { img.remove(); });
+    const dl = document.createElement("dl");
+    [["Clasificación de la IA", p.cl], ["Tiempo de degradación (IA)", p.ti], ["Según la fuente", p.tf], ["¿Se recicla?", p.rec]].forEach(function (par) {
+      const dt = document.createElement("dt"); dt.textContent = par[0];
+      const dd = document.createElement("dd"); dd.textContent = par[1];
+      dl.append(dt, dd);
+    });
+    fila.append(img, dl);
+    detallePrueba.append(h, fila);
+  }
+
+  function dibujarLista() {
+    lista.textContent = "";
+    PRUEBAS.filter(function (p) { return filtroActual === "todas" || p.e === filtroActual; }).forEach(function (p) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "prueba";
+      b.setAttribute("aria-pressed", seleccionada === p.n ? "true" : "false");
+      const foto = document.createElement("div"); foto.className = "foto";
+      const img = document.createElement("img");
+      img.src = IMG + p.f; img.alt = ""; img.loading = "lazy";
+      img.addEventListener("error", function () { img.remove(); foto.textContent = "Sin foto"; });
+      foto.appendChild(img);
+      const txt = document.createElement("div"); txt.className = "txt";
+      const t = document.createElement("div"); t.textContent = p.n + ". " + p.r; t.style.marginBottom = "4px";
+      txt.append(t, etiqueta(p.e));
+      b.append(foto, txt);
+      b.addEventListener("click", function () { seleccionada = p.n; dibujarLista(); dibujarDetalle(); });
+      lista.appendChild(b);
+    });
+  }
+
+  [["todas", "Todas"], ["ok", "Correctas"], ["parcial", "Parciales"], ["mal", "Incorrectas"], ["sin", "Sin fuente"]].forEach(function (f) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = f[1];
+    b.setAttribute("aria-pressed", f[0] === "todas" ? "true" : "false");
+    b.addEventListener("click", function () {
+      filtroActual = f[0];
+      Array.prototype.forEach.call(filtros.children, function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      dibujarLista();
+    });
+    filtros.appendChild(b);
+  });
+
+  dibujarLista();
+  dibujarDetalle();
+</script>
+</body>
+</html>
