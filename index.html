@@ -1325,6 +1325,21 @@
     #bolsin.habla #bolsinBtn svg { animation: bolsinBrinca 0.6s ease-in-out 2; }
     #bolsinGlobo { animation: bolsinSale 0.25s ease-out; }
   }
+  #bolsin .mareo, #bolsin .vomito { display: none; }
+  #bolsin.mareado .mareo, #bolsin.vomitando .vomito { display: inline; }
+  #bolsin.vomitando .boca-mareo { display: none; }
+  #bolsin.mareado .cuerpo { fill: #2f4a2c; }
+  .bolsinAsco { position: fixed; z-index: 41; pointer-events: none; line-height: 1; }
+  @media (prefers-reduced-motion: no-preference) {
+    #bolsin.mareado #bolsinBtn svg { animation: bolsinMareo 0.7s ease-in-out infinite; }
+    #bolsin.vomitando #bolsinBtn svg { animation: bolsinArcada 0.35s ease-in-out infinite; }
+    #bolsin .estrellas { animation: bolsinGira 1s linear infinite; transform-box: fill-box; transform-origin: center; }
+    #bolsin .chorro { animation: bolsinChorro 0.2s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% 0; }
+  }
+  @keyframes bolsinMareo { 0%, 100% { transform: rotate(-14deg); } 50% { transform: rotate(14deg); } }
+  @keyframes bolsinArcada { 0%, 100% { transform: scale(1, 1) rotate(-3deg); } 50% { transform: scale(1.1, 0.9) rotate(3deg); } }
+  @keyframes bolsinGira { to { transform: rotate(360deg); } }
+  @keyframes bolsinChorro { to { transform: scale(1.15, 1.12); } }
   @keyframes bolsinFlota { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-7px) rotate(2deg); } }
   @keyframes bolsinBrinca { 0%, 100% { transform: translateY(0) scale(1, 1); } 30% { transform: translateY(-16px) scale(0.95, 1.06); } 70% { transform: translateY(0) scale(1.07, 0.93); } }
   @keyframes bolsinSale { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
@@ -1334,10 +1349,19 @@
     <svg viewBox="0 0 120 130" aria-hidden="true">
       <path d="M48 30 C36 8 22 14 30 22 C34 27 42 30 50 33 Z" fill="#17171d" stroke="#d9d9ea" stroke-width="3" stroke-linejoin="round"/>
       <path d="M72 30 C84 8 98 14 90 22 C86 27 78 30 70 33 Z" fill="#17171d" stroke="#d9d9ea" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M48 32 C30 44 10 66 12 92 C14 118 34 126 60 126 C86 126 106 118 108 92 C110 66 90 44 72 32 Z" fill="#222229" stroke="#d9d9ea" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M48 32 C30 44 10 66 12 92 C14 118 34 126 60 126 C86 126 106 118 108 92 C110 66 90 44 72 32 Z" class="cuerpo" fill="#222229" stroke="#d9d9ea" stroke-width="4" stroke-linejoin="round"/>
       <rect x="45" y="27" width="30" height="11" rx="5.5" fill="#ffd93d" stroke="#d9d9ea" stroke-width="3"/>
       <path d="M50 42 L42 58 M62 43 L62 54 M72 42 L80 56" fill="none" stroke="#555566" stroke-width="3" stroke-linecap="round"/>
       <path d="M26 82 C26 70 32 62 38 58" fill="none" stroke="#ffffff" stroke-opacity="0.45" stroke-width="6" stroke-linecap="round"/>
+      <g class="mareo">
+        <g class="estrellas"><text x="60" y="16" text-anchor="middle" font-size="26">💫</text></g>
+        <path class="boca-mareo" d="M40 94 Q47 85 53 93 T67 93 T80 92" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <g class="vomito">
+        <ellipse cx="60" cy="88" rx="17" ry="13" fill="#4a1022" stroke="#ffffff" stroke-width="4"/>
+        <path class="chorro" d="M48 92 Q60 86 72 92 C74 108 88 118 86 134 C84 146 74 136 68 142 C62 150 52 146 50 138 C44 144 32 140 36 130 C42 116 48 108 48 92 Z" fill="#9be22d" stroke="#4f8a12" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="55" cy="122" r="4" fill="#d8f56b"/><circle cx="68" cy="132" r="3" fill="#6fae1c"/>
+      </g>
     </svg>
   </button>
   <div id="bolsinGlobo">
@@ -1372,9 +1396,9 @@
   var actual = "inicio", n = 0, callado = false, reloj = null;
   var angosta = window.matchMedia("(max-width: 700px)");
 
-  function decir() {
-    var lista = FRASES[actual];
-    texto.textContent = lista[n % lista.length];
+  var mareado = false;
+  function mostrar(frase) {
+    texto.textContent = frase;
     globo.hidden = false;
     btn.setAttribute("aria-expanded", "true");
     acomodar();
@@ -1382,6 +1406,66 @@
     clearTimeout(reloj);
     // El globo se esconde solo para no tapar la página.
     reloj = setTimeout(ocultar, angosta.matches ? 8000 : 12000);
+  }
+  function decir() {
+    if (mareado) return;
+    var lista = FRASES[actual];
+    mostrar(lista[n % lista.length]);
+  }
+
+  // Si lo zangolotean mucho, se marea y vomita.
+  var recorrido = [];
+  function medirMareo(x, y) {
+    var ahora = performance.now(), ult = recorrido[recorrido.length - 1];
+    recorrido.push({ t: ahora, x: x, y: y, d: ult ? Math.hypot(x - ult.x, y - ult.y) : 0 });
+    while (ahora - recorrido[0].t > 3000) recorrido.shift();
+    var total = recorrido.reduce(function (s, m) { return s + m.d; }, 0);
+    if (total > Math.max(1800, (window.innerWidth + window.innerHeight) * 1.2)) marear();
+  }
+  function marear() {
+    if (mareado) return;
+    mareado = true; recorrido = [];
+    caja.classList.add("mareado");
+    mostrar("¡Ay, ay, ay! Ya me mareé… 😵‍💫");
+    setTimeout(function () {
+      caja.classList.add("vomitando");
+      mostrar("¡Bleeeegh! 🤮");
+      salpicar(0);
+    }, 1200);
+    setTimeout(function () {
+      caja.classList.remove("mareado", "vomitando");
+      mareado = false; recorrido = [];
+      mostrar("Uff… ya estuvo. No me zangolotees así 😅");
+    }, 4200);
+  }
+  function salpicar(i) {
+    if (!mareado || i >= 28 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var r = btn.getBoundingClientRect();
+    var cosas = ["🍌", "🥤", "🥫", "📄", "🍎", "🧦"];
+    var s = document.createElement("span");
+    s.className = "bolsinAsco"; s.setAttribute("aria-hidden", "true");
+    if (i % 3 === 0) s.textContent = cosas[(i / 3) % cosas.length];
+    else {
+      var d = 8 + Math.random() * 12;
+      s.style.width = s.style.height = d + "px";
+      s.style.borderRadius = "50%";
+      s.style.background = i % 2 ? "#9be22d" : "#6fae1c";
+    }
+    s.style.fontSize = "28px";
+    s.style.left = (r.left + r.width / 2 - 10) + "px";
+    s.style.top = (r.top + r.height * 0.65) + "px";
+    document.body.appendChild(s);
+    // Sale hacia el lado donde hay más pantalla y luego cae.
+    var lado = r.left + r.width / 2 < window.innerWidth / 2 ? 1 : -1;
+    var dx = lado * (20 + Math.random() * 120);
+    if (s.animate) {
+      s.animate([
+        { transform: "translate(0, 0) rotate(0deg)", opacity: 1 },
+        { transform: "translate(" + dx * 0.6 + "px, -25px) rotate(" + lado * 120 + "deg)", opacity: 1, offset: 0.35 },
+        { transform: "translate(" + dx + "px, 150px) rotate(" + lado * 300 + "deg)", opacity: 0 }
+      ], { duration: 1100, easing: "ease-in" }).onfinish = function () { s.remove(); };
+    } else setTimeout(function () { s.remove(); }, 1100);
+    setTimeout(function () { salpicar(i + 1); }, 90);
   }
   function ocultar() { clearTimeout(reloj); globo.hidden = true; btn.setAttribute("aria-expanded", "false"); }
 
@@ -1420,6 +1504,7 @@
     var r = caja.getBoundingClientRect();
     agarre = { id: e.pointerId, x: e.clientX, y: e.clientY, left: r.left, top: r.top };
     arrastrado = false;
+    recorrido = [];
     btn.setPointerCapture(e.pointerId);
   });
   btn.addEventListener("pointermove", function (e) {
@@ -1430,6 +1515,7 @@
     arrastrado = true;
     caja.classList.add("arrastrando");
     colocar(agarre.left + dx, agarre.top + dy);
+    medirMareo(e.clientX, e.clientY);
   });
   function soltar() { agarre = null; caja.classList.remove("arrastrando"); }
   btn.addEventListener("pointerup", soltar);
