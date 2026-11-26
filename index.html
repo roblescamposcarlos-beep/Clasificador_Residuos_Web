@@ -1302,5 +1302,118 @@
     escDetalle.append(h, p);
   })();
 </script>
+
+<!-- Bolsín, el asistente -->
+<style>
+  body { padding-bottom: 110px; }
+  #bolsin { position: fixed; left: 12px; bottom: 12px; z-index: 40; display: flex; align-items: flex-end; gap: 8px; pointer-events: none; }
+  #bolsinBtn { pointer-events: auto; flex: none; width: clamp(86px, 9vw, 130px); padding: 0; border: 0; background: none; cursor: pointer; filter: drop-shadow(0 8px 14px rgba(0,0,0,0.45)); }
+  #bolsinBtn svg { display: block; width: 100%; height: auto; overflow: visible; }
+  #bolsinBtn:focus-visible { outline: 4px solid var(--amarillo); border-radius: 20px; }
+  #bolsinGlobo { pointer-events: auto; position: relative; margin-bottom: 46px; width: min(340px, calc(100vw - 130px)); background: #ffffff; color: #1d1840;
+    border-radius: 22px 22px 22px 6px; padding: 14px 16px 12px; box-shadow: 0 10px 28px rgba(0,0,0,0.4); }
+  #bolsinGlobo[hidden] { display: none; }
+  #bolsinNombre { font-family: var(--titulo); font-size: 18px; font-weight: 700; color: #1c7a4a; margin: 0 34px 4px 0; }
+  #bolsinTexto { margin: 0 0 10px; font-size: clamp(18px, 1.1vw + 8px, 22px); line-height: 1.35; font-weight: 800; }
+  #bolsinOtra { font-family: var(--titulo); font-size: 18px; font-weight: 600; border: 0; border-radius: 999px; padding: 6px 18px; background: var(--amarillo); color: #2b1f6b; cursor: pointer; }
+  #bolsinCerrar { position: absolute; top: 6px; right: 8px; width: 34px; height: 34px; border: 0; border-radius: 50%; background: #ece9fb; color: #1d1840; font-size: 18px; font-weight: 800; cursor: pointer; }
+  @media (prefers-reduced-motion: no-preference) {
+    #bolsinBtn svg { animation: bolsinFlota 3s ease-in-out infinite; transform-origin: 50% 100%; }
+    #bolsin.habla #bolsinBtn svg { animation: bolsinBrinca 0.6s ease-in-out 2; }
+    #bolsin .ojos { animation: bolsinParpadeo 4s infinite; transform-box: fill-box; transform-origin: center; }
+    #bolsin.habla .boca { animation: bolsinBoca 0.2s ease-in-out 6 alternate; transform-box: fill-box; transform-origin: center; }
+    #bolsinGlobo { animation: bolsinSale 0.25s ease-out; }
+  }
+  @keyframes bolsinFlota { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-7px) rotate(2deg); } }
+  @keyframes bolsinBrinca { 0%, 100% { transform: translateY(0) scale(1, 1); } 30% { transform: translateY(-16px) scale(0.95, 1.06); } 70% { transform: translateY(0) scale(1.07, 0.93); } }
+  @keyframes bolsinParpadeo { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
+  @keyframes bolsinBoca { to { transform: scaleY(0.45); } }
+  @keyframes bolsinSale { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+</style>
+<div id="bolsin">
+  <button type="button" id="bolsinBtn" aria-label="Bolsín, el asistente: toca para que te explique" aria-expanded="true">
+    <svg viewBox="0 0 120 130" aria-hidden="true">
+      <path d="M48 30 C36 8 22 14 30 22 C34 27 42 30 50 33 Z" fill="#2fae6a" stroke="#0f5c37" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M72 30 C84 8 98 14 90 22 C86 27 78 30 70 33 Z" fill="#2fae6a" stroke="#0f5c37" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M48 32 C30 44 10 66 12 92 C14 118 34 126 60 126 C86 126 106 118 108 92 C110 66 90 44 72 32 Z" fill="#3fd98a" stroke="#0f5c37" stroke-width="4" stroke-linejoin="round"/>
+      <rect x="45" y="27" width="30" height="11" rx="5.5" fill="#ffd93d" stroke="#0f5c37" stroke-width="3"/>
+      <path d="M50 42 L42 58 M62 43 L62 54 M72 42 L80 56" fill="none" stroke="#1f9a5c" stroke-width="3" stroke-linecap="round"/>
+      <path d="M26 82 C26 70 32 62 38 58" fill="none" stroke="#ffffff" stroke-opacity="0.6" stroke-width="6" stroke-linecap="round"/>
+      <g class="ojos">
+        <ellipse cx="45" cy="76" rx="9" ry="11" fill="#ffffff"/><ellipse cx="75" cy="76" rx="9" ry="11" fill="#ffffff"/>
+        <circle cx="47" cy="78" r="5.5" fill="#14112e"/><circle cx="73" cy="78" r="5.5" fill="#14112e"/>
+        <circle cx="49" cy="75" r="2" fill="#ffffff"/><circle cx="75" cy="75" r="2" fill="#ffffff"/>
+      </g>
+      <ellipse cx="31" cy="93" rx="7" ry="4.5" fill="#ff6b9d" opacity="0.75"/><ellipse cx="89" cy="93" rx="7" ry="4.5" fill="#ff6b9d" opacity="0.75"/>
+      <path class="boca" d="M47 94 Q60 92 73 94 Q70 110 60 110 Q50 110 47 94 Z" fill="#7a1f3d" stroke="#0f5c37" stroke-width="3" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div id="bolsinGlobo">
+    <p id="bolsinNombre">Bolsín 💬</p>
+    <p id="bolsinTexto" aria-live="polite"></p>
+    <button type="button" id="bolsinOtra">¿Qué más? 👉</button>
+    <button type="button" id="bolsinCerrar" aria-label="Cerrar el globo">✕</button>
+  </div>
+</div>
+<script>
+(function () {
+  var FRASES = {
+    inicio: ["¡Qué onda! 👋 Soy Bolsín. Baja y te voy contando de qué va la página.",
+             "Aquí le tomas foto a tu basura y la IA te dice dónde va. ¡Así de fácil!"],
+    materia: ["Esto salió de Desarrollo Sustentable. 🌎 Toca las tarjetas, que se voltean.",
+              "La idea: que cada cosa acabe en su bote y no todo revuelto."],
+    herramientas: ["Estas son las herramientas: Claude, Make y Telegram. 🧰 ¡Tócalas!",
+                   "Make es el que conecta todo. Es como el mensajero del equipo."],
+    datos: ["Los numeritos del bot. 📊 Toca uno para verlo contar otra vez.",
+            "Ojo: la IA también se equivoca. Échale un ojo a lo que te diga."],
+    probar: ["¡La hora buena! 📸 Escanea un QR: uno es con Telegram y el otro sin instalar nada.",
+             "Foto a un solo objeto y con buena luz. ¡Y nada de selfies! 🚨"],
+    juego: ["¡A jugar! 🎮 Adivina en qué bote va cada cosa.",
+            "A ver cuántas atinas. ¡No me vayas a tirar mal! 😅"],
+    escenario: ["Así está armado por dentro. 🔧 Toca un círculo y te dice qué hace.",
+                "Pícale a «Ver cómo viaja una foto» y sigue la bolita amarilla."]
+  };
+  var caja = document.getElementById("bolsin");
+  var globo = document.getElementById("bolsinGlobo");
+  var texto = document.getElementById("bolsinTexto");
+  var btn = document.getElementById("bolsinBtn");
+  var actual = "inicio", n = 0, callado = false, reloj = null;
+  var angosta = window.matchMedia("(max-width: 700px)");
+
+  function decir() {
+    var lista = FRASES[actual];
+    texto.textContent = lista[n % lista.length];
+    globo.hidden = false;
+    btn.setAttribute("aria-expanded", "true");
+    caja.classList.remove("habla"); void caja.offsetWidth; caja.classList.add("habla");
+    clearTimeout(reloj);
+    // El globo se esconde solo para no tapar la página.
+    reloj = setTimeout(ocultar, angosta.matches ? 8000 : 12000);
+  }
+  function ocultar() { clearTimeout(reloj); globo.hidden = true; btn.setAttribute("aria-expanded", "false"); }
+
+  btn.addEventListener("click", function () {
+    if (!globo.hidden) n++;
+    callado = false; decir();
+  });
+  document.getElementById("bolsinOtra").addEventListener("click", function () { n++; decir(); });
+  document.getElementById("bolsinCerrar").addEventListener("click", function () { callado = true; ocultar(); btn.focus(); });
+
+  var pendiente = false;
+  function mirar() {
+    pendiente = false;
+    var medio = window.innerHeight * 0.55, nueva = "inicio";
+    Object.keys(FRASES).forEach(function (id) {
+      var s = document.getElementById(id);
+      if (s && s.getBoundingClientRect().top < medio) nueva = id;
+    });
+    if (nueva !== actual) { actual = nueva; n = 0; if (!callado) decir(); }
+  }
+  window.addEventListener("scroll", function () {
+    if (!pendiente) { pendiente = true; requestAnimationFrame(mirar); }
+  }, { passive: true });
+  decir();
+})();
+</script>
 </body>
 </html>
