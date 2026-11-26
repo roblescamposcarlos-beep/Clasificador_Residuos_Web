@@ -1306,11 +1306,14 @@
 <!-- Bolsín, el asistente -->
 <style>
   body { padding-bottom: 110px; }
-  #bolsin { position: fixed; left: 12px; bottom: 12px; z-index: 40; display: flex; align-items: flex-end; gap: 8px; pointer-events: none; }
-  #bolsinBtn { pointer-events: auto; flex: none; width: clamp(86px, 9vw, 130px); padding: 0; border: 0; background: none; cursor: pointer; filter: drop-shadow(0 8px 14px rgba(0,0,0,0.45)); }
+  #bolsin { position: fixed; left: 12px; bottom: 12px; z-index: 40; width: clamp(86px, 9vw, 130px); }
+  #bolsinBtn { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: grab; filter: drop-shadow(0 8px 14px rgba(0,0,0,0.45));
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  #bolsin.arrastrando #bolsinBtn { cursor: grabbing; }
+  #bolsin.arrastrando #bolsinBtn svg { animation: none; transform: scale(1.1) rotate(-4deg); }
   #bolsinBtn svg { display: block; width: 100%; height: auto; overflow: visible; }
   #bolsinBtn:focus-visible { outline: 4px solid var(--amarillo); border-radius: 20px; }
-  #bolsinGlobo { pointer-events: auto; position: relative; margin-bottom: 46px; width: min(340px, calc(100vw - 130px)); background: #ffffff; color: #1d1840;
+  #bolsinGlobo { position: absolute; left: calc(100% + 8px); bottom: 46px; width: min(340px, calc(100vw - 130px)); background: #ffffff; color: #1d1840;
     border-radius: 22px 22px 22px 6px; padding: 14px 16px 12px; box-shadow: 0 10px 28px rgba(0,0,0,0.4); }
   #bolsinGlobo[hidden] { display: none; }
   #bolsinNombre { font-family: var(--titulo); font-size: 18px; font-weight: 700; color: #1c7a4a; margin: 0 34px 4px 0; }
@@ -1327,7 +1330,7 @@
   @keyframes bolsinSale { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
 </style>
 <div id="bolsin">
-  <button type="button" id="bolsinBtn" aria-label="Bolsín, el asistente: toca para que te explique" aria-expanded="true">
+  <button type="button" id="bolsinBtn" aria-label="Bolsín, el asistente: toca para que te explique, o arrástralo para moverlo" aria-expanded="true">
     <svg viewBox="0 0 120 130" aria-hidden="true">
       <path d="M48 30 C36 8 22 14 30 22 C34 27 42 30 50 33 Z" fill="#17171d" stroke="#d9d9ea" stroke-width="3" stroke-linejoin="round"/>
       <path d="M72 30 C84 8 98 14 90 22 C86 27 78 30 70 33 Z" fill="#17171d" stroke="#d9d9ea" stroke-width="3" stroke-linejoin="round"/>
@@ -1374,6 +1377,7 @@
     texto.textContent = lista[n % lista.length];
     globo.hidden = false;
     btn.setAttribute("aria-expanded", "true");
+    acomodar();
     caja.classList.remove("habla"); void caja.offsetWidth; caja.classList.add("habla");
     clearTimeout(reloj);
     // El globo se esconde solo para no tapar la página.
@@ -1381,7 +1385,63 @@
   }
   function ocultar() { clearTimeout(reloj); globo.hidden = true; btn.setAttribute("aria-expanded", "false"); }
 
-  btn.addEventListener("click", function () {
+  // El globo se coloca del lado de la bolsa donde quepa en la pantalla.
+  function limitar(v, min, max) { return Math.max(min, Math.min(v, max)); }
+  function acomodar() {
+    if (globo.hidden) return;
+    var r = caja.getBoundingClientRect(), gw = globo.offsetWidth, gh = globo.offsetHeight;
+    var vw = document.documentElement.clientWidth, vh = window.innerHeight;
+    var x = r.right + 8, y = r.bottom - 46 - gh, pico = "22px 22px 22px 6px";
+    if (x + gw > vw - 8) { x = r.left - 8 - gw; pico = "22px 22px 6px 22px"; }
+    if (x < 8) {
+      // No cabe a los lados: va arriba o abajo de la bolsa.
+      x = limitar(r.left + r.width / 2 - gw / 2, 8, vw - gw - 8);
+      y = r.top - gh - 8; pico = "22px";
+      if (y < 8) y = r.bottom + 8;
+    }
+    y = limitar(y, 8, Math.max(8, vh - gh - 8));
+    globo.style.left = (x - r.left) + "px";
+    globo.style.top = (y - r.top) + "px";
+    globo.style.bottom = "auto";
+    globo.style.borderRadius = pico;
+  }
+
+  // Solo se mueve mientras lo tienes agarrado.
+  var agarre = null, arrastrado = false;
+  function colocar(x, y) {
+    var vw = document.documentElement.clientWidth;
+    caja.style.left = limitar(x, 0, vw - caja.offsetWidth) + "px";
+    caja.style.top = limitar(y, 0, window.innerHeight - caja.offsetHeight) + "px";
+    caja.style.bottom = "auto";
+    acomodar();
+  }
+  btn.addEventListener("pointerdown", function (e) {
+    if (e.button !== 0) return;
+    var r = caja.getBoundingClientRect();
+    agarre = { id: e.pointerId, x: e.clientX, y: e.clientY, left: r.left, top: r.top };
+    arrastrado = false;
+    btn.setPointerCapture(e.pointerId);
+  });
+  btn.addEventListener("pointermove", function (e) {
+    if (!agarre || e.pointerId !== agarre.id) return;
+    var dx = e.clientX - agarre.x, dy = e.clientY - agarre.y;
+    // Un movimiento muy pequeño cuenta como toque, no como arrastre.
+    if (!arrastrado && Math.hypot(dx, dy) < 6) return;
+    arrastrado = true;
+    caja.classList.add("arrastrando");
+    colocar(agarre.left + dx, agarre.top + dy);
+  });
+  function soltar() { agarre = null; caja.classList.remove("arrastrando"); }
+  btn.addEventListener("pointerup", soltar);
+  btn.addEventListener("pointercancel", soltar);
+  btn.addEventListener("lostpointercapture", soltar);
+  window.addEventListener("resize", function () {
+    if (caja.style.top) colocar(parseFloat(caja.style.left), parseFloat(caja.style.top));
+    else acomodar();
+  });
+
+  btn.addEventListener("click", function (e) {
+    if (arrastrado && e.detail !== 0) { arrastrado = false; return; }
     if (!globo.hidden) n++;
     callado = false; decir();
   });
